@@ -20,7 +20,8 @@
     ]
   },
   "mixins": [
-    "testinggrounds.mixins.json"
+    "testinggrounds.mixins.json",
+    "testinggrounds.client.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.10.8",

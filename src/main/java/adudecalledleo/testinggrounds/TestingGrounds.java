@@ -1,7 +1,11 @@
 package adudecalledleo.testinggrounds;
 
 import adudecalledleo.lionutils.LoggerUtil;
+import adudecalledleo.testinggrounds.block.ModBlocks;
+import adudecalledleo.testinggrounds.item.ModItemGroups;
+import adudecalledleo.testinggrounds.item.ModItems;
 import net.fabricmc.api.ModInitializer;
+import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Logger;
 
 public class TestingGrounds implements ModInitializer {
@@ -13,5 +17,13 @@ public class TestingGrounds implements ModInitializer {
     @Override
     public void onInitialize() {
         LOGGER.info("Initializing");
+
+        ModBlocks.register();
+        ModItemGroups.register();
+        ModItems.register();
+    }
+
+    public static Identifier id(String path) {
+        return new Identifier(MOD_ID, path);
     }
 }

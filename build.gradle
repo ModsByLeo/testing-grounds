@@ -11,11 +11,24 @@ version = project.mod_version
 group = project.maven_group
 
 repositories {
-    maven { url "https://dl.bintray.com/adudecalledleo/mcmods.fabric" }
+    maven {
+        name = "ADudeCalledLeo's Fabric mods"
+        url = "https://dl.bintray.com/adudecalledleo/mcmods.fabric"
+    }
 }
 
 def depImpl(String id, boolean include = false) {
     dependencies.modImplementation (id) {
+        exclude group: "net.fabricmc.fabric-api"
+    }
+    if (include)
+        dependencies.include (id) {
+            exclude group: "net.fabricmc.fabric-api"
+        }
+}
+
+def depApi(String id, boolean include = false) {
+    dependencies.modApi (id) {
         exclude group: "net.fabricmc.fabric-api"
     }
     if (include)
@@ -45,7 +58,7 @@ dependencies {
     depImpl "io.github.prospector:modmenu:${project.modmenu_version}"
 }
 
-if (Boolean.valueOf(project.use_runtime_deps)) {
+if (Boolean.parseBoolean(project.use_runtime_deps as String)) {
     repositories {
         maven { url "https://jitpack.io" }
     }

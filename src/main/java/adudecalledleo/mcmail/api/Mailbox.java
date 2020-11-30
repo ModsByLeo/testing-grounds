@@ -1,6 +1,5 @@
 package adudecalledleo.mcmail.api;
 
-import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 
@@ -13,5 +12,5 @@ public interface Mailbox {
     Text getLabel();
     void setLabel(Text label);
 
-    boolean trySend(ItemStack letterStack);
+    boolean trySend(Letter letter);
 }

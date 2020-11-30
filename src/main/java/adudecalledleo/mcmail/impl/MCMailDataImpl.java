@@ -1,12 +1,12 @@
 package adudecalledleo.mcmail.impl;
 
 import adudecalledleo.lionutils.serialize.NbtUtil;
+import adudecalledleo.mcmail.api.Letter;
 import adudecalledleo.mcmail.api.MCMailData;
 import adudecalledleo.mcmail.api.Mailbox;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import net.fabricmc.fabric.api.util.NbtType;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.server.world.ServerWorld;
@@ -68,7 +68,7 @@ public class MCMailDataImpl extends PersistentState implements MCMailData {
         }
 
         @Override
-        public boolean trySend(ItemStack letterStack) {
+        public boolean trySend(Letter letter) {
             if (!tracked)
                 return false;
             // TODO IMPLEMENT THIS!!!

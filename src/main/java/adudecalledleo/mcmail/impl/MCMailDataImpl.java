@@ -1,9 +1,9 @@
 package adudecalledleo.mcmail.impl;
 
 import adudecalledleo.lionutils.serialize.NbtUtil;
-import adudecalledleo.mcmail.api.Message;
 import adudecalledleo.mcmail.api.MCMailData;
 import adudecalledleo.mcmail.api.Mailbox;
+import adudecalledleo.mcmail.api.Message;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArraySet;
 import net.fabricmc.fabric.api.util.NbtType;

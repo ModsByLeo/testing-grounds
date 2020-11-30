@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
-public final class Letter {
+public final class Message {
     @SuppressWarnings("UnusedReturnValue")
     public static final class Builder {
         private final UUID authorUUID;
@@ -64,8 +64,8 @@ public final class Letter {
             return this;
         }
 
-        public Letter build() {
-            return new Letter(authorUUID, title,
+        public Message build() {
+            return new Message(authorUUID, title,
                     bodyBuilder.build(),
                     stacksBuilder.build());
         }
@@ -76,7 +76,7 @@ public final class Letter {
         return new Builder(authorUUID);
     }
 
-    public static final Letter EMPTY = new Letter(new UUID(0, 0), LiteralText.EMPTY,
+    public static final Message EMPTY = new Message(new UUID(0, 0), LiteralText.EMPTY,
             Collections.emptyList(), Collections.emptyList());
 
     private final UUID authorUUID;
@@ -84,7 +84,7 @@ public final class Letter {
     private final List<Text> body;
     private final List<ItemStack> stacks;
 
-    private Letter(UUID authorUUID, Text title, List<Text> body, List<ItemStack> stacks) {
+    private Message(UUID authorUUID, Text title, List<Text> body, List<ItemStack> stacks) {
         this.authorUUID = authorUUID;
         this.title = title;
         this.body = body;
@@ -122,7 +122,7 @@ public final class Letter {
         return tag;
     }
 
-    public static Letter deserialize(CompoundTag source) {
+    public static Message deserialize(CompoundTag source) {
         if (source == null || !source.containsUuid("author_uuid"))
             return EMPTY;
         Builder builder = new Builder(source.getUuid("author_uuid"));

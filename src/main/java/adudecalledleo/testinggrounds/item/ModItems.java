@@ -14,13 +14,9 @@ public final class ModItems {
 
     public static void register() { /* clinit */ }
 
-    public static final LetterItem LETTER;
-
     public static final BlockItem MAILBOX;
 
     static {
-        LETTER = register(id("letter"), new LetterItem(baseMCMailSettings()));
-
         MAILBOX = register(id("mailbox"), new BlockItem(ModBlocks.MAILBOX, baseMCMailSettings()));
     }
 

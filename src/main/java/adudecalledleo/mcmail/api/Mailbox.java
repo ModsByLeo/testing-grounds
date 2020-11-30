@@ -12,5 +12,5 @@ public interface Mailbox {
     Text getLabel();
     void setLabel(Text label);
 
-    boolean trySend(Letter letter);
+    boolean trySend(Message message);
 }

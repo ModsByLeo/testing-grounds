@@ -1,7 +1,7 @@
 package adudecalledleo.mcmail.impl;
 
 import adudecalledleo.lionutils.serialize.NbtUtil;
-import adudecalledleo.mcmail.api.Letter;
+import adudecalledleo.mcmail.api.Message;
 import adudecalledleo.mcmail.api.MCMailData;
 import adudecalledleo.mcmail.api.Mailbox;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
@@ -68,7 +68,7 @@ public class MCMailDataImpl extends PersistentState implements MCMailData {
         }
 
         @Override
-        public boolean trySend(Letter letter) {
+        public boolean trySend(Message message) {
             if (!tracked)
                 return false;
             // TODO IMPLEMENT THIS!!!

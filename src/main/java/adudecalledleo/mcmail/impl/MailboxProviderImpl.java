@@ -28,7 +28,7 @@ public final class MailboxProviderImpl implements MailboxProvider {
         return instance;
     }
 
-    public static void onServerStarted(MinecraftServer server) {
+    public static void onServerStarting(MinecraftServer server) {
         instance = new MailboxProviderImpl(server);
         instance.valid = true;
         instance.load();
@@ -43,6 +43,7 @@ public final class MailboxProviderImpl implements MailboxProvider {
     }
 
     private final MinecraftServer server;
+
     private boolean valid;
 
     private MailboxProviderImpl(MinecraftServer server) {

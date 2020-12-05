@@ -14,7 +14,7 @@ public class MCMail implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        ServerLifecycleEvents.SERVER_STARTED.register(MailboxProviderImpl::onServerStarted);
+        ServerLifecycleEvents.SERVER_STARTING.register(MailboxProviderImpl::onServerStarting);
         ServerLifecycleEvents.SERVER_STOPPED.register(MailboxProviderImpl::onServerStopped);
     }
 }

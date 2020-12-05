@@ -16,6 +16,7 @@
       "adudecalledleo.testinggrounds.client.TestingGroundsClient"
     ],
     "main": [
+      "adudecalledleo.mcmail.MCMail",
       "adudecalledleo.testinggrounds.TestingGrounds"
     ]
   },

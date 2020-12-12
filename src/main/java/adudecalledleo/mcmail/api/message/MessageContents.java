@@ -12,10 +12,12 @@ import java.util.List;
 
 public final class MessageContents {
     public static final class Builder {
+        private final Text title;
         private final ImmutableList.Builder<Text> bodyBuilder;
         private final ImmutableList.Builder<ItemStack> inventoryBuilder;
 
-        private Builder() {
+        private Builder(Text title) {
+            this.title = title;
             bodyBuilder = ImmutableList.builder();
             inventoryBuilder = ImmutableList.builder();
         }
@@ -51,17 +53,19 @@ public final class MessageContents {
         }
 
         public MessageContents build() {
-            return new MessageContents(bodyBuilder.build(), inventoryBuilder.build());
+            return new MessageContents(title, bodyBuilder.build(), inventoryBuilder.build());
         }
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder builder(Text title) {
+        return new Builder(title);
     }
 
     public static MessageContents fromTag(CompoundTag tag) {
-        if (!tag.contains("body", NbtType.LIST) || !tag.contains("inventory", NbtType.LIST))
+        if (!tag.contains("title", NbtType.STRING) || !tag.contains("body", NbtType.LIST)
+                || !tag.contains("inventory", NbtType.LIST))
             return null;
+        Text title = Text.Serializer.fromJson(tag.getString("title"));
         ImmutableList.Builder<Text> bodyBuilder = ImmutableList.builder();
         ListTag bodyList = tag.getList("body", NbtType.STRING);
         for (int i = 0; i < bodyList.size(); i++)
@@ -71,14 +75,21 @@ public final class MessageContents {
         ListTag inventoryList = tag.getList("inventory", NbtType.COMPOUND);
         for (int i = 0; i < inventoryList.size(); i++)
             inventoryBuilder.add(ItemStack.fromTag(inventoryList.getCompound(i)));
-        return new MessageContents(bodyBuilder.build(), inventoryBuilder.build());
+        return new MessageContents(title, bodyBuilder.build(), inventoryBuilder.build());
     }
+
+    private final Text title;
     private final List<Text> body;
     private final List<ItemStack> inventory;
 
-    private MessageContents(List<Text> body, List<ItemStack> inventory) {
+    private MessageContents(Text title, List<Text> body, List<ItemStack> inventory) {
+        this.title = title;
         this.body = body;
         this.inventory = inventory;
+    }
+
+    public Text getTitle() {
+        return title;
     }
 
     public List<Text> getBody() {
@@ -90,6 +101,7 @@ public final class MessageContents {
     }
 
     public CompoundTag toTag(CompoundTag tag) {
+        tag.putString("title", Text.Serializer.toJson(title));
         ListTag bodyList = new ListTag();
         for (Text line : body)
             bodyList.add(StringTag.of(Text.Serializer.toJson(line)));

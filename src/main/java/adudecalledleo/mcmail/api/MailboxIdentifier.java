@@ -20,6 +20,19 @@ public final class MailboxIdentifier {
         this.worldPos = worldPos;
     }
 
+    public static MailboxIdentifier of(@NotNull RegistryKey<World> worldKey, @NotNull BlockPos worldPos) {
+        return new MailboxIdentifier(worldKey, worldPos);
+    }
+
+    public static MailboxIdentifier fromTag(@NotNull CompoundTag tag) {
+        if (!tag.contains("dim", NbtType.STRING) || !tag.contains("pos", NbtType.LONG))
+            return null;
+        Identifier worldKeyValue = Identifier.tryParse(tag.getString("dim"));
+        if (worldKeyValue == null)
+            return null;
+        return of(RegistryKey.of(Registry.DIMENSION, worldKeyValue), BlockPos.fromLong(tag.getLong("pos")));
+    }
+
     @NotNull
     public RegistryKey<World> getWorldKey() {
         return worldKey;
@@ -31,7 +44,7 @@ public final class MailboxIdentifier {
     }
 
     public CompoundTag toTag(@NotNull CompoundTag tag) {
-        tag.putString("key", worldKey.getValue().toString());
+        tag.putString("dim", worldKey.getValue().toString());
         tag.putLong("pos", worldPos.asLong());
         return tag;
     }
@@ -49,18 +62,5 @@ public final class MailboxIdentifier {
     @Override
     public int hashCode() {
         return Objects.hash(worldKey, worldPos);
-    }
-
-    public static MailboxIdentifier of(@NotNull RegistryKey<World> worldKey, @NotNull BlockPos worldPos) {
-        return new MailboxIdentifier(worldKey, worldPos);
-    }
-
-    public static MailboxIdentifier fromTag(@NotNull CompoundTag tag) {
-        if (!tag.contains("key", NbtType.STRING) || !tag.contains("pos", NbtType.LONG))
-            return null;
-        Identifier worldKeyValue = Identifier.tryParse(tag.getString("key"));
-        if (worldKeyValue == null)
-            return null;
-        return of(RegistryKey.of(Registry.DIMENSION, worldKeyValue), BlockPos.fromLong(tag.getLong("pos")));
     }
 }

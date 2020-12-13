@@ -16,11 +16,13 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.WorldSavePath;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -179,16 +181,16 @@ public final class MailboxProviderImpl implements MailboxProvider {
     private final Reference2ReferenceOpenHashMap<MailboxIdentifier, ReferenceBigArrayBigList<MessageImpl>> messages =
             new Reference2ReferenceOpenHashMap<>();
 
-    private File getDataPath() {
-        return server.getFile("mcmail");
+    private Path getDataPath() {
+        return server.getSavePath(WorldSavePath.ROOT).resolve("mcmail");
     }
 
-    private File getMailboxesFile() {
-        return new File(getDataPath(), "mailboxes.dat");
+    private Path getMailboxesPath() {
+        return getDataPath().resolve("mailboxes.dat");
     }
 
-    private File getMessagesFile() {
-        return new File(getDataPath(), "messages.dat");
+    private Path getMessagesPath() {
+        return getDataPath().resolve("messages.dat");
     }
 
     private void load() {
@@ -197,11 +199,12 @@ public final class MailboxProviderImpl implements MailboxProvider {
     }
     
     private void loadMailboxes() {
-        LOGGER.info("Loading mailboxes...");
+        Path mailboxesPath = getMailboxesPath();
+        LOGGER.info("Loading mailboxes from \"{}\"...", mailboxesPath);
         CompoundTag mailboxesTag;
-        try {
-            mailboxesTag = NbtIo.readCompressed(getMailboxesFile());
-        } catch (FileNotFoundException e) {
+        try (InputStream is = Files.newInputStream(mailboxesPath)) {
+            mailboxesTag = NbtIo.readCompressed(is);
+        } catch (NoSuchFileException e) {
             LOGGER.info("Mailboxes file not found, assuming new installation.");
             return;
         } catch (IOException e) {
@@ -234,11 +237,12 @@ public final class MailboxProviderImpl implements MailboxProvider {
     }
 
     private void loadMessages() {
-        LOGGER.info("Loading messages...");
+        Path messagesPath = getMessagesPath();
+        LOGGER.info("Loading messages from \"{}\"...", messagesPath);
         CompoundTag messagesTag;
-        try {
-            messagesTag = NbtIo.readCompressed(getMessagesFile());
-        } catch (FileNotFoundException e) {
+        try (InputStream is = Files.newInputStream(messagesPath)) {
+            messagesTag = NbtIo.readCompressed(is);
+        } catch (NoSuchFileException e) {
             LOGGER.info("Messages file not found, assuming new installation.");
             return;
         } catch (IOException e) {
@@ -282,12 +286,18 @@ public final class MailboxProviderImpl implements MailboxProvider {
     }
 
     private void save() {
+        try {
+            Files.createDirectories(getDataPath());
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't save: failed to create data path", e);
+        }
         saveMailboxes();
         saveMessages();
     }
 
     private void saveMailboxes() {
-        LOGGER.info("Saving mailboxes...");
+        Path mailboxesPath = getMailboxesPath();
+        LOGGER.info("Saving mailboxes to \"{}\"...", mailboxesPath);
         CompoundTag mailboxesTag = new CompoundTag();
         mailboxesTag.putLong("version", MAILBOXES_VERSION);
         ListTag mailboxesList = new ListTag();
@@ -299,8 +309,8 @@ public final class MailboxProviderImpl implements MailboxProvider {
             mailboxesList.add(mailboxTag);
         }
         mailboxesTag.put("mailboxes", mailboxesList);
-        try {
-            NbtIo.writeCompressed(mailboxesTag, getMailboxesFile());
+        try (OutputStream os = Files.newOutputStream(mailboxesPath)) {
+            NbtIo.writeCompressed(mailboxesTag, os);
         } catch (IOException e) {
             throw new RuntimeException("Couldn't save mailboxes: failed to write file", e);
         }
@@ -308,7 +318,8 @@ public final class MailboxProviderImpl implements MailboxProvider {
     }
 
     private void saveMessages() {
-        LOGGER.info("Saving messages...");
+        Path messagesPath = getMessagesPath();
+        LOGGER.info("Saving messages to \"{}\"...", messagesPath);
         CompoundTag messagesTag = new CompoundTag();
         messagesTag.putLong("version", MESSAGES_VERSION);
         ListTag messagesList = new ListTag();
@@ -324,8 +335,8 @@ public final class MailboxProviderImpl implements MailboxProvider {
             }
         }
         messagesTag.put("messages", messagesList);
-        try {
-            NbtIo.writeCompressed(messagesTag, getMessagesFile());
+        try (OutputStream os = Files.newOutputStream(messagesPath)) {
+            NbtIo.writeCompressed(messagesTag, os);
         } catch (IOException e) {
             throw new RuntimeException("Couldn't save messages: failed to write file", e);
         }

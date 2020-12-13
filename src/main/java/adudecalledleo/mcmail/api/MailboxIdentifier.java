@@ -21,7 +21,7 @@ public final class MailboxIdentifier {
     }
 
     public static MailboxIdentifier of(@NotNull RegistryKey<World> worldKey, @NotNull BlockPos worldPos) {
-        return new MailboxIdentifier(worldKey, worldPos);
+        return new MailboxIdentifier(worldKey, worldPos.toImmutable());
     }
 
     public static MailboxIdentifier fromTag(@NotNull CompoundTag tag) {

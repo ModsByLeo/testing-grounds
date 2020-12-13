@@ -14,6 +14,6 @@ public final class ModItemGroups {
     public static final ItemGroup MCMAIL;
 
     static {
-        MCMAIL = FabricItemGroupBuilder.build(id("mcmail"), () -> new ItemStack(ModItems.LETTER));
+        MCMAIL = FabricItemGroupBuilder.build(id("mcmail"), () -> new ItemStack(ModItems.MAILBOX));
     }
 }

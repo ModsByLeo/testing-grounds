@@ -2,6 +2,7 @@ package adudecalledleo.testinggrounds;
 
 import adudecalledleo.lionutils.LoggerUtil;
 import adudecalledleo.testinggrounds.block.ModBlocks;
+import adudecalledleo.testinggrounds.block.entity.ModBlockEntities;
 import adudecalledleo.testinggrounds.item.ModItemGroups;
 import adudecalledleo.testinggrounds.item.ModItems;
 import net.fabricmc.api.ModInitializer;
@@ -19,6 +20,7 @@ public class TestingGrounds implements ModInitializer {
         LOGGER.info("Initializing");
 
         ModBlocks.register();
+        ModBlockEntities.register();
         ModItemGroups.register();
         ModItems.register();
     }

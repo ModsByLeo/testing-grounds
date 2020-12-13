@@ -15,6 +15,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -25,6 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static adudecalledleo.mcmail.MCMail.LOGGER;
+import static adudecalledleo.mcmail.MCMail.NIL_UUID;
 
 public final class MailboxProviderImpl implements MailboxProvider {
     private static final long MAILBOXES_VERSION = 0;
@@ -86,16 +88,23 @@ public final class MailboxProviderImpl implements MailboxProvider {
         }
 
         @Override
-        public boolean send(UUID senderUuid, MessageContents contents) {
+        public @NotNull Optional<Text> send(@NotNull UUID senderUuid, @NotNull MessageContents contents) {
+            if (!tracked)
+                return Optional.of(new TranslatableText("mcmail.message.error.bad_mailbox"));
+            if (NIL_UUID.equals(senderUuid))
+                return Optional.of(new TranslatableText("mcmail.message.error.bad_sender"));
+            if (contents.getInventory().size() > 27)
+                return Optional.of(new TranslatableText("mcmail.message.error.inventory_too_big",
+                        contents.getInventory().size(), 27));
             MessageImpl message = new MessageImpl(senderUuid, mId, Instant.now(), contents);
             message.read = false;
             addMessage(message);
-            return true;
+            return Optional.empty();
         }
 
         @Override
         public @NotNull List<Message> getMessages() {
-            if (!messages.containsKey(mId))
+            if (!tracked || !messages.containsKey(mId))
                 return Collections.emptyList();
             return ImmutableList.copyOf(messages.get(mId));
         }
@@ -107,7 +116,10 @@ public final class MailboxProviderImpl implements MailboxProvider {
 
         @Override
         public void setLabel(Text label) {
-            this.label = label.shallowCopy();
+            if (label == null)
+                this.label = null;
+            else
+                this.label = label.shallowCopy();
         }
     }
 
@@ -321,11 +333,13 @@ public final class MailboxProviderImpl implements MailboxProvider {
     }
 
     private void addMessage(MessageImpl message) {
+        assertValid();
         messages.computeIfAbsent(message.recipient, mailboxIdentifier -> new ReferenceBigArrayBigList<>())
                 .add(message);
     }
 
     private boolean removeMessage(MessageImpl message) {
+        assertValid();
         if (!messages.containsKey(message.recipient))
             return false;
         ReferenceBigArrayBigList<MessageImpl> messageList = messages.get(message.recipient);

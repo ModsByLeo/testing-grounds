@@ -13,7 +13,10 @@ public interface Mailbox {
     @NotNull MailboxIdentifier getId();
     @NotNull UUID getOwnerUuid();
 
-    boolean send(UUID senderUuid, MessageContents contents);
+    /**
+     * @return empty {@code Optional} on success, {@code Optional} containing error message on failure
+     */
+    @NotNull Optional<Text> send(@NotNull UUID senderUuid, @NotNull MessageContents contents);
     @NotNull List<Message> getMessages();
 
     @NotNull Optional<Text> getLabel();

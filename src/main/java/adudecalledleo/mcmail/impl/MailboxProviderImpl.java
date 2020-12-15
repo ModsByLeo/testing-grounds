@@ -10,16 +10,23 @@ import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceBigArrayBigList;
 import net.fabricmc.fabric.api.util.NbtType;
+import net.minecraft.item.Item;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.WorldSavePath;
+import net.minecraft.util.registry.Registry;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -71,8 +78,10 @@ public final class MailboxProviderImpl implements MailboxProvider {
     private final class MailboxImpl implements Mailbox {
         private final MailboxIdentifier mId;
         private final UUID ownerUuid;
-        private Text label;
-        private boolean tracked;
+        private boolean unlisted = false;
+        private Item icon = Items.AIR;
+        private Text label = null;
+        private boolean tracked = false;
 
         private MailboxImpl(MailboxIdentifier mId, UUID ownerUuid) {
             this.mId = mId;
@@ -112,16 +121,33 @@ public final class MailboxProviderImpl implements MailboxProvider {
         }
 
         @Override
+        public boolean isUnlisted() {
+            return unlisted;
+        }
+
+        @Override
+        public void setUnlisted(boolean unlisted) {
+            this.unlisted = unlisted;
+        }
+
+        @Override
+        public @NotNull Item getIcon() {
+            return icon;
+        }
+
+        @Override
+        public void setIcon(@NotNull Item icon) {
+            this.icon = icon;
+        }
+
+        @Override
         public @NotNull Optional<Text> getLabel() {
             return Optional.ofNullable(label);
         }
 
         @Override
         public void setLabel(Text label) {
-            if (label == null)
-                this.label = null;
-            else
-                this.label = label.shallowCopy();
+            this.label = label;
         }
     }
 
@@ -216,20 +242,41 @@ public final class MailboxProviderImpl implements MailboxProvider {
         for (int i = 0; i < mailboxesList.size(); i++) {
             CompoundTag mailboxTag = mailboxesList.getCompound(i);
             if (!mailboxTag.contains("id", NbtType.COMPOUND) || !mailboxTag.containsUuid("owner")) {
-                LOGGER.warn("Couldn't load mailbox " + i + ": malformed entry (missing fields)");
+                LOGGER.warn("Couldn't load mailbox {}: malformed entry (missing fields)", i);
                 continue;
             }
             MailboxIdentifier mId = MailboxIdentifier.fromTag(mailboxTag.getCompound("id"));
             if (mId == null) {
-                LOGGER.warn("Couldn't load mailbox " + i + ": malformed entry (id tag malformed)");
+                LOGGER.warn("Couldn't load mailbox {}: malformed entry (id tag malformed)", i);
                 continue;
             }
             UUID ownerUuid = mailboxTag.getUuid("owner");
+            Item icon = Items.AIR;
+            if (mailboxTag.contains("icon", NbtType.STRING)) {
+                String iconIdStr = mailboxTag.getString("icon");
+                Identifier iconId = null;
+                try {
+                    iconId = new Identifier(iconIdStr);
+                } catch (InvalidIdentifierException e) {
+                    LOGGER.warn(String.format("Mailbox %d: couldn't load icon due to invalid identifier \"%s\"", i, iconIdStr), e);
+                }
+                if (iconId != null) {
+                    if (Registry.ITEM.containsId(iconId))
+                        icon = Registry.ITEM.get(iconId);
+                    else
+                        LOGGER.warn("Mailbox {}: couldn't load icon due to unregistered identifier \"{}\"", i, iconId);
+                }
+            }
             Text label = null;
             if (mailboxTag.contains("label", NbtType.STRING))
                 label = Text.Serializer.fromJson(mailboxTag.getString("label"));
+            boolean unlisted = true;
+            if (mailboxTag.contains("unlisted", NbtType.BYTE))
+                unlisted = mailboxTag.getBoolean("unlisted");
             MailboxImpl mailbox = new MailboxImpl(mId, ownerUuid);
+            mailbox.icon = icon;
             mailbox.label = label;
+            mailbox.unlisted = unlisted;
             mailbox.tracked = true;
             mailboxes.put(mId, mailbox);
         }
@@ -255,23 +302,23 @@ public final class MailboxProviderImpl implements MailboxProvider {
             CompoundTag messageTag = messagesList.getCompound(i);
             if (!messageTag.containsUuid("sender") || !messageTag.contains("recipient", NbtType.COMPOUND)
                     || !messageTag.contains("timestamp", NbtType.LONG) || !messageTag.contains("contents", NbtType.COMPOUND)) {
-                LOGGER.warn("Couldn't load message " + i + ": malformed entry (missing fields)");
+                LOGGER.warn("Couldn't load message {}: malformed entry (missing fields)", i);
                 continue;
             }
             UUID senderUuid = messageTag.getUuid("sender");
             MailboxIdentifier recipient = MailboxIdentifier.fromTag(messageTag.getCompound("recipient"));
             if (recipient == null) {
-                LOGGER.warn("Couldn't load message " + i + ": malformed entry (malformed recipient)");
+                LOGGER.warn("Couldn't load message {}: malformed entry (malformed recipient)", i);
                 continue;
             }
             if (!mailboxes.containsKey(recipient)) {
-                LOGGER.warn("Couldn't load message " + i + ": orphaned entry (recipient doesn't exist)");
+                LOGGER.warn("Couldn't load message {}: orphaned entry (recipient doesn't exist)", i);
                 continue;
             }
             Instant timestamp = Instant.ofEpochSecond(messageTag.getLong("timestamp"));
             MessageContents contents = MessageContents.fromTag(messageTag.getCompound("contents"));
             if (contents == null) {
-                LOGGER.warn("Couldn't load message " + i + ": malformed entry (malformed contents)");
+                LOGGER.warn("Couldn't load message {}: malformed entry (malformed contents)", i);
                 continue;
             }
             MessageImpl message = new MessageImpl(senderUuid, recipient, timestamp, contents);
@@ -305,7 +352,9 @@ public final class MailboxProviderImpl implements MailboxProvider {
             CompoundTag mailboxTag = new CompoundTag();
             mailboxTag.put("id", mailbox.mId.toTag(new CompoundTag()));
             mailboxTag.putUuid("owner", mailbox.ownerUuid);
+            mailboxTag.putString("icon", Registry.ITEM.getId(mailbox.icon).toString());
             mailboxTag.putString("label", Text.Serializer.toJson(mailbox.label));
+            mailboxTag.putBoolean("unlisted", mailbox.unlisted);
             mailboxesList.add(mailboxTag);
         }
         mailboxesTag.put("mailboxes", mailboxesList);
@@ -394,7 +443,7 @@ public final class MailboxProviderImpl implements MailboxProvider {
     public @NotNull Set<Mailbox> queryOwnedBy(UUID ownerUuid) {
         assertValid();
         Set<MailboxImpl> filtered = mailboxes.values().stream()
-                .filter(mailbox -> mailbox.ownerUuid.equals(ownerUuid))
+                .filter(mailbox -> !mailbox.unlisted && mailbox.ownerUuid.equals(ownerUuid))
                 .collect(Collectors.toSet());
         if (filtered.isEmpty())
             return Collections.emptySet();

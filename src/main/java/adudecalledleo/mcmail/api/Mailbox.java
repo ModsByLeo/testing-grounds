@@ -2,6 +2,7 @@ package adudecalledleo.mcmail.api;
 
 import adudecalledleo.mcmail.api.message.Message;
 import adudecalledleo.mcmail.api.message.MessageContents;
+import net.minecraft.item.Item;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,6 +20,11 @@ public interface Mailbox {
     @NotNull Optional<Text> send(@NotNull UUID senderUuid, @NotNull MessageContents contents);
     @NotNull List<Message> getMessages();
 
+    boolean isUnlisted();
+    void setUnlisted(boolean unlisted);
+
+    @NotNull Item getIcon();
+    void setIcon(@NotNull Item icon);
     @NotNull Optional<Text> getLabel();
     void setLabel(Text label);
 }

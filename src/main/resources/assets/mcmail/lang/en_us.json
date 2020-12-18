@@ -1,5 +1,5 @@
 {
+  "mcmail.message.error.bad_id": "That identifier doesn't match any mailbox!",
   "mcmail.message.error.bad_mailbox": "Provider says this mailbox can't be used!",
-  "mcmail.message.error.bad_sender": "Sender UUID is nil!",
   "mcmail.message.error.inventory_too_big": "Your message has too many items! (%s, while maximum is %s)"
 }

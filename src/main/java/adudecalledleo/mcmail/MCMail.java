@@ -3,7 +3,6 @@ package adudecalledleo.mcmail;
 import adudecalledleo.lionutils.LoggerUtil;
 import adudecalledleo.mcmail.impl.MailboxProviderImpl;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import org.apache.logging.log4j.Logger;
 
 import java.util.UUID;
@@ -18,8 +17,7 @@ public class MCMail implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        ServerLifecycleEvents.SERVER_STARTING.register(MailboxProviderImpl::onServerStarting);
-        ServerLifecycleEvents.SERVER_STOPPED.register(MailboxProviderImpl::onServerStopped);
+        MailboxProviderImpl.initialize();
         LOGGER.info("Postal service ready!");
     }
 }

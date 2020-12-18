@@ -5,10 +5,12 @@ import adudecalledleo.mcmail.api.MailboxIdentifier;
 import adudecalledleo.mcmail.api.MailboxProvider;
 import adudecalledleo.mcmail.api.message.Message;
 import adudecalledleo.mcmail.api.message.MessageContents;
+import adudecalledleo.mcmail.api.message.Sender;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceBigArrayBigList;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
@@ -47,13 +49,18 @@ public final class MailboxProviderImpl implements MailboxProvider {
         return instance;
     }
 
-    public static void onServerStarting(MinecraftServer server) {
+    public static void initialize() {
+        ServerLifecycleEvents.SERVER_STARTING.register(MailboxProviderImpl::onServerStarting);
+        ServerLifecycleEvents.SERVER_STOPPED.register(MailboxProviderImpl::onServerStopped);
+    }
+
+    private static void onServerStarting(MinecraftServer server) {
         instance = new MailboxProviderImpl(server);
         instance.valid = true;
         instance.load();
     }
 
-    public static void onServerStopped(MinecraftServer server) {
+    private static void onServerStopped(MinecraftServer server) {
         if (instance.server == server) {
             instance.save();
             instance.valid = false;
@@ -99,15 +106,13 @@ public final class MailboxProviderImpl implements MailboxProvider {
         }
 
         @Override
-        public @NotNull Optional<Text> send(@NotNull UUID senderUuid, @NotNull MessageContents contents) {
+        public @NotNull Optional<Text> send(@NotNull Sender sender, @NotNull MessageContents contents) {
             if (!tracked)
                 return Optional.of(new TranslatableText("mcmail.message.error.bad_mailbox"));
-            if (NIL_UUID.equals(senderUuid))
-                return Optional.of(new TranslatableText("mcmail.message.error.bad_sender"));
             if (contents.getInventory().size() > 27)
                 return Optional.of(new TranslatableText("mcmail.message.error.inventory_too_big",
                         contents.getInventory().size(), 27));
-            MessageImpl message = new MessageImpl(senderUuid, mId, Instant.now(), contents);
+            MessageImpl message = new MessageImpl(sender, mId, Instant.now(), contents);
             message.read = false;
             addMessage(message);
             return Optional.empty();
@@ -152,23 +157,24 @@ public final class MailboxProviderImpl implements MailboxProvider {
     }
 
     private final class MessageImpl implements Message {
-        private final UUID senderUuid;
+        private final Sender sender;
         private final MailboxIdentifier recipient;
         private final Instant timestamp;
         private final MessageContents contents;
         private boolean read;
 
-        private MessageImpl(UUID senderUuid, MailboxIdentifier recipient, Instant timestamp,
+        private MessageImpl(Sender sender, MailboxIdentifier recipient,
+                Instant timestamp,
                 MessageContents contents) {
-            this.senderUuid = senderUuid;
+            this.sender = sender;
             this.recipient = recipient;
             this.timestamp = timestamp;
             this.contents = contents;
         }
 
         @Override
-        public @NotNull UUID getSenderUuid() {
-            return senderUuid;
+        public @NotNull Sender getSender() {
+            return sender;
         }
 
         @Override
@@ -202,10 +208,10 @@ public final class MailboxProviderImpl implements MailboxProvider {
         }
     }
 
-    private final Reference2ReferenceOpenHashMap<MailboxIdentifier, MailboxImpl> mailboxes =
-            new Reference2ReferenceOpenHashMap<>();
-    private final Reference2ReferenceOpenHashMap<MailboxIdentifier, ReferenceBigArrayBigList<MessageImpl>> messages =
-            new Reference2ReferenceOpenHashMap<>();
+    private final Object2ReferenceOpenHashMap<MailboxIdentifier, MailboxImpl> mailboxes =
+            new Object2ReferenceOpenHashMap<>();
+    private final Object2ReferenceOpenHashMap<MailboxIdentifier, ReferenceBigArrayBigList<MessageImpl>> messages =
+            new Object2ReferenceOpenHashMap<>();
 
     private Path getDataPath() {
         return server.getSavePath(WorldSavePath.ROOT).resolve("mcmail");
@@ -300,12 +306,16 @@ public final class MailboxProviderImpl implements MailboxProvider {
         ListTag messagesList = messagesTag.getList("messages", NbtType.COMPOUND);
         for (int i = 0; i < messagesList.size(); i++) {
             CompoundTag messageTag = messagesList.getCompound(i);
-            if (!messageTag.containsUuid("sender") || !messageTag.contains("recipient", NbtType.COMPOUND)
+            if (!messageTag.contains("sender", NbtType.COMPOUND) || !messageTag.contains("recipient", NbtType.COMPOUND)
                     || !messageTag.contains("timestamp", NbtType.LONG) || !messageTag.contains("contents", NbtType.COMPOUND)) {
                 LOGGER.warn("Couldn't load message {}: malformed entry (missing fields)", i);
                 continue;
             }
-            UUID senderUuid = messageTag.getUuid("sender");
+            Sender sender = Sender.fromTag(messageTag.getCompound("sender"));
+            if (sender == null) {
+                LOGGER.warn("Couldn't load message {}: malformed entry (malformed sender)", i);
+                continue;
+            }
             MailboxIdentifier recipient = MailboxIdentifier.fromTag(messageTag.getCompound("recipient"));
             if (recipient == null) {
                 LOGGER.warn("Couldn't load message {}: malformed entry (malformed recipient)", i);
@@ -321,7 +331,7 @@ public final class MailboxProviderImpl implements MailboxProvider {
                 LOGGER.warn("Couldn't load message {}: malformed entry (malformed contents)", i);
                 continue;
             }
-            MessageImpl message = new MessageImpl(senderUuid, recipient, timestamp, contents);
+            MessageImpl message = new MessageImpl(sender, recipient, timestamp, contents);
             boolean read = false;
             if (messageTag.contains("read", NbtType.BYTE))
                 read = messageTag.getBoolean("read");
@@ -375,7 +385,7 @@ public final class MailboxProviderImpl implements MailboxProvider {
         for (ReferenceBigArrayBigList<MessageImpl> sublist : messages.values()) {
             for (MessageImpl message : sublist) {
                 CompoundTag messageTag = new CompoundTag();
-                messageTag.putUuid("sender", message.senderUuid);
+                messageTag.put("sender", message.sender.toTag(new CompoundTag()));
                 messageTag.put("recipient", message.recipient.toTag(new CompoundTag()));
                 messageTag.putLong("timestamp", message.timestamp.getEpochSecond());
                 messageTag.put("contents", message.contents.toTag(new CompoundTag()));
@@ -412,19 +422,19 @@ public final class MailboxProviderImpl implements MailboxProvider {
     }
 
     @Override
-    public boolean hasMailbox(MailboxIdentifier mId) {
+    public boolean hasMailbox(@NotNull MailboxIdentifier mId) {
         assertValid();
         return mailboxes.containsKey(mId);
     }
 
     @Override
-    public @NotNull Optional<Mailbox> getMailbox(MailboxIdentifier mId) {
+    public @NotNull Optional<Mailbox> getMailbox(@NotNull MailboxIdentifier mId) {
         assertValid();
         return Optional.ofNullable(mailboxes.get(mId));
     }
 
     @Override
-    public @NotNull Mailbox getOrCreateMailbox(MailboxIdentifier mId, UUID ownerUuid) {
+    public @NotNull Mailbox getOrCreateMailbox(@NotNull MailboxIdentifier mId, @NotNull UUID ownerUuid) {
         assertValid();
         return mailboxes.computeIfAbsent(mId, mId1 -> {
             MailboxImpl mailbox = new MailboxImpl(mId, ownerUuid);
@@ -434,13 +444,13 @@ public final class MailboxProviderImpl implements MailboxProvider {
     }
 
     @Override
-    public @NotNull Optional<Mailbox> removeMailbox(MailboxIdentifier mId) {
+    public @NotNull Optional<Mailbox> removeMailbox(@NotNull MailboxIdentifier mId) {
         assertValid();
         return Optional.ofNullable(mailboxes.remove(mId));
     }
 
     @Override
-    public @NotNull Set<Mailbox> queryOwnedBy(UUID ownerUuid) {
+    public @NotNull Set<Mailbox> queryOwnedBy(@NotNull UUID ownerUuid) {
         assertValid();
         Set<MailboxImpl> filtered = mailboxes.values().stream()
                 .filter(mailbox -> !mailbox.unlisted && mailbox.ownerUuid.equals(ownerUuid))

@@ -6,6 +6,7 @@ import adudecalledleo.mcmail.api.MailboxIdentifier;
 import adudecalledleo.mcmail.api.MailboxProvider;
 import adudecalledleo.mcmail.api.message.Message;
 import adudecalledleo.mcmail.api.message.MessageContents;
+import adudecalledleo.mcmail.api.message.Sender;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.enchantment.Enchantments;
@@ -48,7 +49,7 @@ class MailboxCommand {
                             .setCustomName(new LiteralText("Slayah"))
                             .build())
                     .build();
-            Optional<Text> err = mailbox.send(playerUuid, contents);
+            Optional<Text> err = mailbox.send(Sender.ofPlayer(playerUuid), contents);
             if (err.isPresent()) {
                 src.sendError(new LiteralText("Failed to perform test send: ").append(err.get()));
                 return 0;

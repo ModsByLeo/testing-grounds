@@ -7,6 +7,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -22,32 +23,32 @@ public final class MessageContents {
             inventoryBuilder = ImmutableList.builder();
         }
 
-        public Builder addBodyLine(Text line) {
+        public Builder addBodyLine(@NotNull Text line) {
             bodyBuilder.add(line);
             return this;
         }
 
-        public Builder addBodyLines(Text... lines) {
+        public Builder addBodyLines(@NotNull Text... lines) {
             bodyBuilder.add(lines);
             return this;
         }
 
-        public Builder addBodyLines(Iterable<Text> lines) {
+        public Builder addBodyLines(@NotNull Iterable<Text> lines) {
             bodyBuilder.addAll(lines);
             return this;
         }
 
-        public Builder addInventoryStack(ItemStack stack) {
+        public Builder addInventoryStack(@NotNull ItemStack stack) {
             inventoryBuilder.add(stack);
             return this;
         }
 
-        public Builder addInventoryStacks(ItemStack... stacks) {
+        public Builder addInventoryStacks(@NotNull ItemStack... stacks) {
             inventoryBuilder.add(stacks);
             return this;
         }
 
-        public Builder addInventoryStacks(Iterable<ItemStack> stacks) {
+        public Builder addInventoryStacks(@NotNull Iterable<ItemStack> stacks) {
             inventoryBuilder.addAll(stacks);
             return this;
         }
@@ -57,11 +58,13 @@ public final class MessageContents {
         }
     }
 
-    public static Builder builder(Text title) {
+    public static Builder builder(@NotNull Text title) {
         return new Builder(title);
     }
 
     public static MessageContents fromTag(CompoundTag tag) {
+        if (tag == null)
+            return null;
         if (!tag.contains("title", NbtType.STRING) || !tag.contains("body", NbtType.LIST)
                 || !tag.contains("inventory", NbtType.LIST))
             return null;
@@ -100,7 +103,7 @@ public final class MessageContents {
         return inventory;
     }
 
-    public CompoundTag toTag(CompoundTag tag) {
+    public @NotNull CompoundTag toTag(@NotNull CompoundTag tag) {
         tag.putString("title", Text.Serializer.toJson(title));
         ListTag bodyList = new ListTag();
         for (Text line : body)

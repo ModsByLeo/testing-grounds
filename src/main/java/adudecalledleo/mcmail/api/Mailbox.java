@@ -2,6 +2,7 @@ package adudecalledleo.mcmail.api;
 
 import adudecalledleo.mcmail.api.message.Message;
 import adudecalledleo.mcmail.api.message.MessageContents;
+import adudecalledleo.mcmail.api.message.Sender;
 import net.minecraft.item.Item;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +18,7 @@ public interface Mailbox {
     /**
      * @return empty {@code Optional} on success, {@code Optional} containing error message on failure
      */
-    @NotNull Optional<Text> send(@NotNull UUID senderUuid, @NotNull MessageContents contents);
+    @NotNull Optional<Text> send(@NotNull Sender sender, @NotNull MessageContents contents);
     @NotNull List<Message> getMessages();
 
     boolean isUnlisted();

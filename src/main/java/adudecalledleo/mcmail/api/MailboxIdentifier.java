@@ -24,7 +24,9 @@ public final class MailboxIdentifier {
         return new MailboxIdentifier(worldKey, worldPos.toImmutable());
     }
 
-    public static MailboxIdentifier fromTag(@NotNull CompoundTag tag) {
+    public static MailboxIdentifier fromTag(CompoundTag tag) {
+        if (tag == null)
+            return null;
         if (!tag.contains("dim", NbtType.STRING) || !tag.contains("pos", NbtType.LONG))
             return null;
         Identifier worldKeyValue = Identifier.tryParse(tag.getString("dim"));
@@ -43,7 +45,7 @@ public final class MailboxIdentifier {
         return worldPos;
     }
 
-    public CompoundTag toTag(@NotNull CompoundTag tag) {
+    public @NotNull CompoundTag toTag(@NotNull CompoundTag tag) {
         tag.putString("dim", worldKey.getValue().toString());
         tag.putLong("pos", worldPos.asLong());
         return tag;

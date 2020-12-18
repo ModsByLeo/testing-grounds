@@ -4,10 +4,9 @@ import adudecalledleo.mcmail.api.MailboxIdentifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
-import java.util.UUID;
 
 public interface Message {
-    @NotNull UUID getSenderUuid();
+    @NotNull Sender getSender();
     @NotNull MailboxIdentifier getRecipient();
     @NotNull Instant getTimestamp();
     @NotNull MessageContents getContents();

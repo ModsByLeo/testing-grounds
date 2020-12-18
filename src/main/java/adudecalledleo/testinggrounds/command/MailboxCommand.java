@@ -49,7 +49,7 @@ class MailboxCommand {
                             .setCustomName(new LiteralText("Slayah"))
                             .build())
                     .build();
-            Optional<Text> err = mailbox.send(Sender.ofPlayer(playerUuid), contents);
+            Optional<Text> err = mailbox.send(Sender.ofNPC(new LiteralText("System")), contents);
             if (err.isPresent()) {
                 src.sendError(new LiteralText("Failed to perform test send: ").append(err.get()));
                 return 0;
@@ -64,6 +64,7 @@ class MailboxCommand {
                 return 0;
             }
             Message message = messages.get(0);
+            src.sendFeedback(new LiteralText("From: ").append(message.getSenderName()), false);
             src.sendFeedback(new LiteralText("Title: ").append(message.getContents().getTitle()), false);
             src.sendFeedback(new LiteralText("Contents: "), false);
             for (Text line : message.getContents().getBody())

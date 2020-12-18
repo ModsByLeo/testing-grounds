@@ -23,37 +23,37 @@ public final class MessageContents {
             inventoryBuilder = ImmutableList.builder();
         }
 
-        public Builder addBodyLine(@NotNull Text line) {
+        public @NotNull Builder addBodyLine(@NotNull Text line) {
             bodyBuilder.add(line);
             return this;
         }
 
-        public Builder addBodyLines(@NotNull Text... lines) {
+        public @NotNull Builder addBodyLines(@NotNull Text... lines) {
             bodyBuilder.add(lines);
             return this;
         }
 
-        public Builder addBodyLines(@NotNull Iterable<Text> lines) {
+        public @NotNull Builder addBodyLines(@NotNull Iterable<Text> lines) {
             bodyBuilder.addAll(lines);
             return this;
         }
 
-        public Builder addInventoryStack(@NotNull ItemStack stack) {
+        public @NotNull Builder addInventoryStack(@NotNull ItemStack stack) {
             inventoryBuilder.add(stack);
             return this;
         }
 
-        public Builder addInventoryStacks(@NotNull ItemStack... stacks) {
+        public @NotNull Builder addInventoryStacks(@NotNull ItemStack... stacks) {
             inventoryBuilder.add(stacks);
             return this;
         }
 
-        public Builder addInventoryStacks(@NotNull Iterable<ItemStack> stacks) {
+        public @NotNull Builder addInventoryStacks(@NotNull Iterable<ItemStack> stacks) {
             inventoryBuilder.addAll(stacks);
             return this;
         }
 
-        public MessageContents build() {
+        public @NotNull MessageContents build() {
             return new MessageContents(title, bodyBuilder.build(), inventoryBuilder.build());
         }
     }

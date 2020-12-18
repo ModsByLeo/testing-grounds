@@ -20,7 +20,7 @@ public final class MailboxIdentifier {
         this.worldPos = worldPos;
     }
 
-    public static MailboxIdentifier of(@NotNull RegistryKey<World> worldKey, @NotNull BlockPos worldPos) {
+    public @NotNull static MailboxIdentifier of(@NotNull RegistryKey<World> worldKey, @NotNull BlockPos worldPos) {
         return new MailboxIdentifier(worldKey, worldPos.toImmutable());
     }
 

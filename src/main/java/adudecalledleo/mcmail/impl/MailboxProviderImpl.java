@@ -5,6 +5,7 @@ import adudecalledleo.mcmail.api.MailboxIdentifier;
 import adudecalledleo.mcmail.api.MailboxProvider;
 import adudecalledleo.mcmail.api.message.Message;
 import adudecalledleo.mcmail.api.message.MessageContents;
+import adudecalledleo.mcmail.api.message.MessagePrerequisite;
 import adudecalledleo.mcmail.api.message.Sender;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -112,9 +113,16 @@ public final class MailboxProviderImpl implements MailboxProvider {
             if (contents.getInventory().size() > 27)
                 return Optional.of(new TranslatableText("mcmail.message.error.inventory_too_big",
                         contents.getInventory().size(), 27));
+            if (sender.isPlayer()) {
+                Optional<Text> err = prerequisite.canSend(sender.getUuid(), contents);
+                if (err.isPresent())
+                    return err;
+            }
             MessageImpl message = new MessageImpl(sender, mId, Instant.now(), contents);
             message.read = false;
             addMessage(message);
+            if (sender.isPlayer())
+                prerequisite.postSend(sender.getUuid(), contents);
             return Optional.empty();
         }
 
@@ -419,6 +427,18 @@ public final class MailboxProviderImpl implements MailboxProvider {
             return true;
         }
         return succ;
+    }
+
+    private MessagePrerequisite prerequisite = MessagePrerequisite.NONE;
+
+    @Override
+    public void setPrerequisite(@NotNull MessagePrerequisite prerequisite) {
+        this.prerequisite = prerequisite;
+    }
+
+    @Override
+    public @NotNull Text describePrerequisite(@NotNull MessageContents contents) {
+        return prerequisite.describe(contents);
     }
 
     @Override

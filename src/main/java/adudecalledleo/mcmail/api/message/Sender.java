@@ -66,7 +66,7 @@ public abstract class Sender {
     /**
      * Gets the specified sender's name.<p>
      * If the sender is not a player, it simply retrieves the sender's {@linkplain #getName() name field}.<br>
-     * Otherwise, it queries the session service for the player's current username (using {@link GameProfileUtil#getPlayerName(UUID)}.
+     * Otherwise, it queries the session service for the player's current username (using {@link GameProfileUtil#getPlayerName(UUID)}).
      * @param sender the sender
      * @return the sender's name as a {@code Text}
      */

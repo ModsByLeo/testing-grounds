@@ -1,4 +1,5 @@
 {
+  "mcmail.message.prerequisite.none": "None",
   "mcmail.message.sender.unknown": "<unknown>",
   "mcmail.message.error.bad_id": "That identifier doesn't match any mailbox!",
   "mcmail.message.error.bad_mailbox": "Provider says this mailbox can't be used!",

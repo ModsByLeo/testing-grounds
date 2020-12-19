@@ -1,6 +1,7 @@
 package adudecalledleo.mcmail.api;
 
 import adudecalledleo.mcmail.api.message.MessageContents;
+import adudecalledleo.mcmail.api.message.MessagePrerequisite;
 import adudecalledleo.mcmail.api.message.Sender;
 import adudecalledleo.mcmail.impl.MailboxProviderImpl;
 import net.minecraft.text.Text;
@@ -18,6 +19,9 @@ public interface MailboxProvider {
             throw new IllegalStateException("Mailbox provider doesn't exist! Has the server not started yet/stopped?");
         return mailboxProvider;
     }
+
+    void setPrerequisite(@NotNull MessagePrerequisite prerequisite);
+    @NotNull Text describePrerequisite(@NotNull MessageContents contents);
 
     boolean hasMailbox(@NotNull MailboxIdentifier mId);
     @NotNull Optional<Mailbox> getMailbox(@NotNull MailboxIdentifier mId);

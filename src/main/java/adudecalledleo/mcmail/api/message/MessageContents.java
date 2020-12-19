@@ -6,6 +6,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
@@ -71,9 +72,12 @@ public final class MessageContents {
         Text title = Text.Serializer.fromJson(tag.getString("title"));
         ImmutableList.Builder<Text> bodyBuilder = ImmutableList.builder();
         ListTag bodyList = tag.getList("body", NbtType.STRING);
-        for (int i = 0; i < bodyList.size(); i++)
-            //noinspection ConstantConditions
-            bodyBuilder.add(Text.Serializer.fromJson(bodyList.getString(i)));
+        for (int i = 0; i < bodyList.size(); i++) {
+            Text line = Text.Serializer.fromJson(bodyList.getString(i));
+            if (line == null)
+                line = LiteralText.EMPTY;
+            bodyBuilder.add(line);
+        }
         ImmutableList.Builder<ItemStack> inventoryBuilder = ImmutableList.builder();
         ListTag inventoryList = tag.getList("inventory", NbtType.COMPOUND);
         for (int i = 0; i < inventoryList.size(); i++)

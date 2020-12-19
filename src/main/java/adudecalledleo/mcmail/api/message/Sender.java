@@ -8,35 +8,58 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
 import static adudecalledleo.mcmail.MCMail.NIL_UUID;
 
-public final class Sender {
+public abstract class Sender {
+    protected final String type;
+
+    protected Sender(String type) {
+        this.type = type;
+    }
+
+    public abstract boolean isPlayer();
+    public abstract @NotNull UUID getUuid();
+    /**
+     * Name is only available for non-player senders.<br>
+     * Use {@link #getSenderName(Sender)} to get a player sender's name.
+     */
+    public abstract @NotNull Optional<Text> getName();
+    public @NotNull CompoundTag toTag(@NotNull CompoundTag tag) {
+        tag.putString("type", type);
+        return tag;
+    }
+
     public static @NotNull Sender ofPlayer(@NotNull UUID playerUuid) {
-        return new Sender(playerUuid);
+        return new PlayerSender(playerUuid);
     }
 
     public static @NotNull Sender ofNPC(@NotNull Text npcName) {
-        return new Sender(npcName);
+        return new NPCSender(npcName);
     }
 
     public static Sender fromTag(CompoundTag tag) {
         if (tag == null)
             return null;
-        if (!tag.contains("player", NbtType.BYTE))
+        if (!tag.contains("type", NbtType.STRING))
             return null;
-        boolean isPlayer = tag.getBoolean("player");
-        if (isPlayer) {
+        switch (tag.getString("type")) {
+        case "player":
             if (!tag.containsUuid("uuid"))
                 return null;
             return ofPlayer(tag.getUuid("uuid"));
-        } else {
+        case "npc":
             if (!tag.contains("name", NbtType.STRING))
                 return null;
-            //noinspection ConstantConditions
-            return ofNPC(Text.Serializer.fromJson(tag.getString("name")));
+            Text npcName = Text.Serializer.fromJson(tag.getString("name"));
+            if (npcName == null)
+                return null;
+            return ofNPC(npcName);
+        default:
+            return null;
         }
     }
 
@@ -57,46 +80,101 @@ public final class Sender {
         return new LiteralText(playerName);
     }
 
-    private final boolean isPlayer;
-    private final UUID uuid;
-    private final Text name;
+    private static final class PlayerSender extends Sender {
+        private final UUID playerUuid;
 
-    private Sender(UUID uuid) {
-        isPlayer = true;
-        this.uuid = uuid;
-        name = null;
-    }
-
-    private Sender(Text name) {
-        isPlayer = false;
-        uuid = NIL_UUID;
-        this.name = name;
-    }
-
-    public boolean isPlayer() {
-        return isPlayer;
-    }
-
-    public @NotNull UUID getUuid() {
-        return uuid;
-    }
-
-    /**
-     * Name is only available for non-player senders.<br>
-     * Use {@link #getSenderName(Sender)} to get a player sender's name.
-     */
-    public @NotNull Optional<Text> getName() {
-        return Optional.ofNullable(name);
-    }
-
-    public @NotNull CompoundTag toTag(@NotNull CompoundTag tag) {
-        if (isPlayer) {
-            tag.putBoolean("player", true);
-            tag.putUuid("uuid", uuid);
-        } else {
-            tag.putBoolean("player", false);
-            tag.putString("name", Text.Serializer.toJson(name));
+        public PlayerSender(UUID playerUuid) {
+            super("player");
+            this.playerUuid = playerUuid;
         }
-        return tag;
+
+        @Override
+        public boolean isPlayer() {
+            return true;
+        }
+
+        @Override
+        public @NotNull UUID getUuid() {
+            return playerUuid;
+        }
+
+        @Override
+        public @NotNull Optional<Text> getName() {
+            return Optional.empty();
+        }
+
+        @Override
+        public @NotNull CompoundTag toTag(@NotNull CompoundTag tag) {
+            super.toTag(tag);
+            tag.putUuid("uuid", playerUuid);
+            return tag;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PlayerSender that = (PlayerSender) o;
+            return type.equals(that.type) && playerUuid.equals(that.playerUuid);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, playerUuid);
+        }
+
+        @Override
+        public String toString() {
+            return "Sender.Player{" + playerUuid + "}";
+        }
+    }
+
+    private static final class NPCSender extends Sender {
+        private final Text npcName;
+
+        public NPCSender(Text npcName) {
+            super("npc");
+            this.npcName = npcName;
+        }
+
+        @Override
+        public boolean isPlayer() {
+            return false;
+        }
+
+        @Override
+        public @NotNull UUID getUuid() {
+            return NIL_UUID;
+        }
+
+        @Override
+        public @NotNull Optional<Text> getName() {
+            return Optional.of(npcName);
+        }
+
+        @Override
+        public @NotNull CompoundTag toTag(@NotNull CompoundTag tag) {
+            super.toTag(tag);
+            tag.putString("name", Text.Serializer.toJson(npcName));
+            return tag;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            NPCSender that = (NPCSender) o;
+            return type.equals(that.type) && npcName.equals(that.npcName);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, npcName);
+        }
+
+        @Override
+        public String toString() {
+            return "Sender.NPC{" + npcName + "}";
+        }
     }
 }

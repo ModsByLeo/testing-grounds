@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public interface MailboxProvider {
-    static MailboxProvider get() {
+    static @NotNull MailboxProvider get() {
         MailboxProvider mailboxProvider = MailboxProviderImpl.getInstance();
         if (mailboxProvider == null)
             throw new IllegalStateException("Mailbox provider doesn't exist! Has the server not started yet/stopped?");

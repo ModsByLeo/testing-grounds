@@ -38,7 +38,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static adudecalledleo.mcmail.MCMail.LOGGER;
-import static adudecalledleo.mcmail.MCMail.NIL_UUID;
 
 public final class MailboxProviderImpl implements MailboxProvider {
     private static final long MAILBOXES_VERSION = 0;

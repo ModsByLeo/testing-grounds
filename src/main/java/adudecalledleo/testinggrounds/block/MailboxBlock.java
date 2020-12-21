@@ -1,17 +1,25 @@
 package adudecalledleo.testinggrounds.block;
 
 import adudecalledleo.lionutils.block.ProperHorizontalFacingBlock;
+import adudecalledleo.mcmail.api.MailboxIdentifier;
+import adudecalledleo.mcmail.api.MailboxProvider;
 import adudecalledleo.testinggrounds.block.entity.MailboxBlockEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
+import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.Random;
 import java.util.UUID;
 
 public class MailboxBlock extends ProperHorizontalFacingBlock {
@@ -46,5 +54,22 @@ public class MailboxBlock extends ProperHorizontalFacingBlock {
         if (be instanceof MailboxBlockEntity)
             return ((MailboxBlockEntity) be).getOwnerUuid();
         return null;
+    }
+
+    @Override
+    public void onPlaced(World world, BlockPos pos, BlockState state, @Nullable LivingEntity placer,
+            ItemStack itemStack) {
+        if (!world.isClient)
+            world.getBlockTickScheduler().schedule(pos, this, 2);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
+        world.getBlockTickScheduler().schedule(pos, this, 1500); // do again in 30 seconds
+        MailboxProvider.get().getMailbox(MailboxIdentifier.of(world.getRegistryKey(), pos))
+                .ifPresent(mailbox -> world.setBlockState(pos, state.with(FLAG_UP,
+                        mailbox.getMessages().stream().anyMatch(message -> !message.isRead())),
+                        3));
     }
 }

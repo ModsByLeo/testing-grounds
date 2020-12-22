@@ -25,6 +25,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.InvalidIdentifierException;
 import net.minecraft.util.WorldSavePath;
 import net.minecraft.util.registry.Registry;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 
 import static adudecalledleo.mcmail.MCMail.LOGGER;
 
+@ApiStatus.Internal
 public final class MailboxProviderImpl implements MailboxProvider {
     private static final long MAILBOXES_VERSION = 0;
     private static final long MESSAGES_VERSION = 0;

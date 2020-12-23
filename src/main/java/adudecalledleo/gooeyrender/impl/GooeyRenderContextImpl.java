@@ -30,6 +30,8 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     }
 
     private static final class MatrixStackImpl implements MatrixStack {
+        private static final Vector3f Z_ONLY = new Vector3f(0, 0, 1);
+
         private final net.minecraft.client.util.math.MatrixStack delegate;
 
         public MatrixStackImpl() {
@@ -62,8 +64,8 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
         }
 
         @Override
-        public void rotate(float x, float y, float angle, boolean degrees) {
-            delegate.multiply(new Quaternion(new Vector3f(x, y, 0), angle, degrees));
+        public void rotate(float angle, boolean degrees) {
+            delegate.multiply(new Quaternion(Z_ONLY, angle, degrees));
         }
     }
 
@@ -76,14 +78,18 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
 
         @Override
         public void enable() {
-            enabled = true;
-            onEnabled();
+            if (!enabled) {
+                enabled = true;
+                onEnabled();
+            }
         }
 
         @Override
         public void disable() {
-            enabled = false;
-            onDisabled();
+            if (enabled) {
+                enabled = false;
+                onDisabled();
+            }
         }
 
         @Override
@@ -140,6 +146,58 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
         }
     }
 
+    private static final class BlendManagerImpl extends ToggleableImpl implements BlendManager {
+        @Override
+        public void setFunction(int srcFactor, int dstFactor) {
+            RenderSystem.blendFunc(srcFactor, dstFactor);
+        }
+
+        @Override
+        public void setFunctionSeparate(int srcFactorRGB, int dstFactorRGB, int srcFactorAlpha, int dstFactorAlpha) {
+            RenderSystem.blendFuncSeparate(srcFactorRGB, dstFactorRGB, srcFactorAlpha, dstFactorAlpha);
+        }
+
+        @Override
+        public void setDefaultFunction() {
+            RenderSystem.defaultBlendFunc();
+        }
+
+        @Override
+        protected void onEnabled() {
+            RenderSystem.enableBlend();
+        }
+
+        @Override
+        protected void onDisabled() {
+            RenderSystem.disableBlend();
+        }
+    }
+
+    private final class AlphaTestManagerImpl extends ToggleableImpl implements AlphaTestManager {
+        @Override
+        public void setFunction(int function, float reference) {
+            //noinspection deprecation
+            RenderSystem.alphaFunc(function, reference);
+        }
+
+        @Override
+        public void setDefaultFunction() {
+            RenderSystem.defaultAlphaFunc();
+        }
+
+        @Override
+        protected void onEnabled() {
+            //noinspection deprecation
+            RenderSystem.enableAlphaTest();
+        }
+
+        @Override
+        protected void onDisabled() {
+            //noinspection deprecation
+            RenderSystem.disableAlphaTest();
+        }
+    }
+
     private final class TextRendererImpl implements TextRenderer {
         private final net.minecraft.client.font.TextRenderer delegate;
 
@@ -166,7 +224,7 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
 
         @Override
         public void draw(Text text, int x, int y, int color, boolean shadow) {
-            draw0((OrderedText) text, x, y, color, shadow);
+            draw0(text.asOrderedText(), x, y, color, shadow);
         }
 
         @Override
@@ -225,15 +283,21 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
 
     private final MatrixStackImpl matrixStack;
     private final ScissorManagerImpl scissorManager;
+    private final BlendManagerImpl blendManager;
+    private final AlphaTestManagerImpl alphaTestManager;
     private final TextureManagerImpl textureManager;
     private final TextRendererImpl textRenderer;
 
     private boolean isReady;
     private float tickDelta;
 
+    private boolean smoothShading;
+
     private GooeyRenderContextImpl() {
         matrixStack = new MatrixStackImpl();
         scissorManager = new ScissorManagerImpl();
+        blendManager = new BlendManagerImpl();
+        alphaTestManager = new AlphaTestManagerImpl();
         textureManager = new TextureManagerImpl();
         textRenderer = new TextRendererImpl();
     }
@@ -241,6 +305,9 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     public void setup(float tickDelta) {
         this.tickDelta = tickDelta;
         isReady = true;
+
+        scissorManager.disable();
+        textureManager.disable();
     }
 
     public void invalidate() {
@@ -258,6 +325,18 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     }
 
     @Override
+    public boolean isSmoothShading() {
+        return smoothShading;
+    }
+
+    @Override
+    public void setSmoothShading(boolean smoothShading) {
+        this.smoothShading = smoothShading;
+        //noinspection deprecation
+        RenderSystem.shadeModel(smoothShading ? GL11.GL_SMOOTH : GL11.GL_FLAT);
+    }
+
+    @Override
     public @NotNull MatrixStack matrixStack() {
         return matrixStack;
     }
@@ -265,6 +344,16 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     @Override
     public @NotNull ScissorManager scissorManager() {
         return scissorManager;
+    }
+
+    @Override
+    public @NotNull BlendManager blendManager() {
+        return blendManager;
+    }
+
+    @Override
+    public @NotNull AlphaTestManager alphaTestManager() {
+        return alphaTestManager;
     }
 
     @Override

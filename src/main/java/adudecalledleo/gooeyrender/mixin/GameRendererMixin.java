@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
     @Inject(method = "render",
-            at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/client/render/DiffuseLighting;enableGuiDepthLighting()V"))
+            at = @At(value = "NEW", target = "net/minecraft/client/util/math/MatrixStack", ordinal = 1))
     public void setupContext(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         GooeyRenderContextImpl.getInstance().setup(tickDelta);
     }

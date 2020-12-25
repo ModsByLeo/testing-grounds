@@ -13,10 +13,10 @@
   "environment": "*",
   "entrypoints": {
     "client": [
+      "adudecalledleo.gooeyrender.GooeyRender",
       "adudecalledleo.testinggrounds.client.TestingGroundsClient"
     ],
     "main": [
-      "adudecalledleo.gooeyrender.GooeyRender",
       "adudecalledleo.mcmail.MCMail",
       "adudecalledleo.testinggrounds.TestingGrounds"
     ]

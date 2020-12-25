@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 public final class VertexBuilder {
     private VertexBuilder() { }
 
+    @FunctionalInterface
     interface VertexFunction {
         void apply(GooeyRenderContext.VertexConsumer consumer, int id, float x, float y);
 
@@ -83,11 +84,10 @@ public final class VertexBuilder {
             @NotNull GooeyRenderContext.VertexConsumer consumer,
             @NotNull VertexFunction function,
             float x, float y, float w, float h) {
-        float[] vertices = new float[8];
-        vertices[0] = x + w; vertices[1] = y;
-        vertices[2] = x; vertices[3] = y;
-        vertices[4] = x; vertices[5] = y + h;
-        vertices[6] = x + w; vertices[7] = y + h;
-        return build(consumer, function, vertices);
+        return build(consumer, function,
+                x + w, y,
+                x, y,
+                x, y + h,
+                x + w, y + h);
     }
 }

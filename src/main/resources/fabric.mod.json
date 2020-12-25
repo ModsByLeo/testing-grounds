@@ -17,12 +17,14 @@
       "adudecalledleo.testinggrounds.client.TestingGroundsClient"
     ],
     "main": [
+      "adudecalledleo.serversiding.ServerSiding",
       "adudecalledleo.mcmail.MCMail",
       "adudecalledleo.testinggrounds.TestingGrounds"
     ]
   },
   "mixins": [
     "gooeyrender.mixins.json",
+    "serversiding.mixins.json",
     "testinggrounds.mixins.json",
     "testinggrounds.client.mixins.json"
   ],

@@ -5,8 +5,11 @@ import io.netty.util.concurrent.GenericFutureListener;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import net.fabricmc.fabric.api.block.entity.BlockEntityClientSerializable;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.block.entity.CommandBlockBlockEntity;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -92,7 +95,7 @@ public final class FakeBlockUtil {
     /**
      * For use with block entities that implement {@link BlockEntityClientSerializable}.
      */
-    public static UpdatableBlockEntityType customUpdatableType(Identifier registryId) {
+    public static UpdatableBlockEntityType customUpdatableType(@NotNull Identifier registryId) {
         return CUSTOM_TYPES.computeIfAbsent(registryId, CustomUpdatableBlockEntityType::new);
     }
 
@@ -114,8 +117,9 @@ public final class FakeBlockUtil {
             @NotNull UpdatableBlockEntityType type, @NotNull CompoundTag tag,
             @Nullable GenericFutureListener<? extends Future<? super Void>> listener) {
         if (!player.notInAnyWorld && World.isValid(pos)) {
-            writeIdentifyingData(pos, type, tag);
-            player.networkHandler.sendPacket(new BlockEntityUpdateS2CPacket(pos, type.getUpdatePacketId(), tag), listener);
+            CompoundTag copy = tag.copy();
+            writeIdentifyingData(pos, type, copy);
+            player.networkHandler.sendPacket(new BlockEntityUpdateS2CPacket(pos, type.getUpdatePacketId(), copy), listener);
         }
     }
 
@@ -136,6 +140,59 @@ public final class FakeBlockUtil {
     }
 
     public static void sendRealBlock(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos) {
+        sendRealBlock(player, pos, null);
+    }
+
+    private static @Nullable Packet<?> getUpdatePacket(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos) {
+        BlockEntity blockEntity = player.getServerWorld().getBlockEntity(pos);
+        if (blockEntity == null)
+            return null;
+
+        if (blockEntity instanceof BlockEntityClientSerializable) {
+            CompoundTag tag = new CompoundTag();
+            tag = ((BlockEntityClientSerializable) blockEntity).toClientTag(tag);
+            return new BlockEntityUpdateS2CPacket(pos, 127, tag);
+        } else {
+            // force command blocks to create an update packet (custom "isDirty" logic here, thanks mojank)
+            boolean neededUpdatePacket = false;
+            CommandBlockBlockEntity commandBlockBlockEntity = null;
+            if (blockEntity instanceof CommandBlockBlockEntity)
+                commandBlockBlockEntity = (CommandBlockBlockEntity) blockEntity;
+            if (commandBlockBlockEntity != null) {
+                neededUpdatePacket = commandBlockBlockEntity.needsUpdatePacket();
+                commandBlockBlockEntity.setNeedsUpdatePacket(true);
+            }
+            // defer to vanilla's toUpdatePacket() method
+            Packet<?> packet = blockEntity.toUpdatePacket();
+            // restore command block state
+            if (commandBlockBlockEntity != null)
+                commandBlockBlockEntity.setNeedsUpdatePacket(neededUpdatePacket);
+            return packet;
+        }
+    }
+
+    /**
+     * This method only works with certain block entities that have special behavior for syncing with clients
+     * (I.E. those specified in the {@link UpdatableBlockEntityTypes} enum, or which implement {@link BlockEntityClientSerializable}).<br>
+     * Other block entities rely on the chunk itself being sent to the player, which is beyond the scope of this utility library
+     * (and also your mod, probably).
+     */
+    public static void sendRealBlockEntity(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos,
+            @Nullable GenericFutureListener<? extends Future<? super Void>> listener) {
+        if (!player.notInAnyWorld && World.isValid(pos)) {
+            Packet<?> packet = getUpdatePacket(player, pos);
+            if (packet != null)
+                player.networkHandler.sendPacket(packet, listener);
+        }
+    }
+
+    /**
+     * This method only works with certain block entities that have special behavior for syncing with clients
+     * (I.E. those specified in the {@link UpdatableBlockEntityTypes} enum, or which implement {@link BlockEntityClientSerializable}).<br>
+     * Other block entities rely on the chunk itself being sent to the player, which is beyond the scope of this utility library
+     * (and also your mod, probably).
+     */
+    public static void sendRealBlockEntity(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos) {
         sendRealBlock(player, pos, null);
     }
 }

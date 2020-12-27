@@ -3,7 +3,6 @@ package adudecalledleo.serversiding.util;
 import adudecalledleo.serversiding.impl.SignEditPromptData;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.SignBlockEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.packet.s2c.play.SignEditorOpenS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -75,6 +74,10 @@ public final class SignEditPrompt {
 
     public static void open(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos, @NotNull Callback callback,
             @NotNull SignType signType, @NotNull DyeColor textColor, @NotNull Text... initialLines) {
+        SignEditPromptData.Entry entry = SignEditPromptData.remove(player);
+        if (entry != null)
+            entry.fail();
+
         CompoundTag tag = new CompoundTag();
         for (int i = 0; i < 4; i++) {
             tag.putString("Text" + (i + 1),
@@ -85,10 +88,8 @@ public final class SignEditPrompt {
         tag.putString("Color", textColor.getName());
 
         FakeBlockUtil.sendFakeBlock(player, pos, signType.getBlockState(), future ->
-                FakeBlockUtil.sendFakeBlockEntity(player, pos, FakeBlockUtil.UpdatableBlockEntityTypes.SIGN, tag, future1 -> {
-                    SignEditPromptData.add(player, pos, callback);
-                    player.networkHandler.sendPacket(new SignEditorOpenS2CPacket(pos));
-                })
-        );
+                FakeBlockUtil.sendFakeBlockEntity(player, pos, FakeBlockUtil.UpdatableBlockEntityTypes.SIGN, tag,
+                        future1 -> player.networkHandler.sendPacket(new SignEditorOpenS2CPacket(pos), future2 ->
+                                SignEditPromptData.add(player, pos, callback))));
     }
 }

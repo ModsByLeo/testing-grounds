@@ -1,4 +1,4 @@
-package adudecalledleo.serversiding.util;
+package adudecalledleo.serversiding.api;
 
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
@@ -19,8 +19,8 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class FakeBlockUtil {
-    private FakeBlockUtil() { }
+public final class FakeBlocks {
+    private FakeBlocks() { }
     
     public static void sendFakeBlock(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos, @NotNull BlockState state,
             @Nullable GenericFutureListener<? extends Future<? super Void>> listener) {
@@ -32,12 +32,12 @@ public final class FakeBlockUtil {
         sendFakeBlock(player, pos, state, null);
     }
 
-    public interface UpdatableBlockEntityType {
+    public interface UpdatableEntityType {
         @NotNull Identifier getRegistryId();
         int getUpdatePacketId();
     }
 
-    public enum UpdatableBlockEntityTypes implements UpdatableBlockEntityType {
+    public enum UpdatableEntityTypes implements UpdatableEntityType {
         MOB_SPAWNER(BlockEntityType.MOB_SPAWNER, 1),
         COMMAND_BLOCK(BlockEntityType.COMMAND_BLOCK, 2),
         BEACON(BlockEntityType.BEACON, 3),
@@ -55,7 +55,7 @@ public final class FakeBlockUtil {
         private final Identifier registryId;
         private final int updatePacketId;
 
-        UpdatableBlockEntityTypes(BlockEntityType<?> blockEntityType, int updatePacketId) {
+        UpdatableEntityTypes(BlockEntityType<?> blockEntityType, int updatePacketId) {
             registryId = BlockEntityType.getId(blockEntityType);
             this.updatePacketId = updatePacketId;
 
@@ -74,10 +74,10 @@ public final class FakeBlockUtil {
         }
     }
 
-    private static final class CustomUpdatableBlockEntityType implements UpdatableBlockEntityType {
+    private static final class CustomUpdatableEntityType implements UpdatableEntityType {
         private final Identifier registryId;
 
-        public CustomUpdatableBlockEntityType(Identifier registryId) {
+        public CustomUpdatableEntityType(Identifier registryId) {
             this.registryId = registryId;
         }
 
@@ -92,17 +92,17 @@ public final class FakeBlockUtil {
         }
     }
 
-    private static final Object2ReferenceOpenHashMap<Identifier, UpdatableBlockEntityType> CUSTOM_TYPES =
+    private static final Object2ReferenceOpenHashMap<Identifier, UpdatableEntityType> CUSTOM_TYPES =
             new Object2ReferenceOpenHashMap<>();
 
     /**
      * For use with block entities that implement {@link BlockEntityClientSerializable}.
      */
-    public static UpdatableBlockEntityType customUpdatableType(@NotNull Identifier registryId) {
-        return CUSTOM_TYPES.computeIfAbsent(registryId, CustomUpdatableBlockEntityType::new);
+    public static UpdatableEntityType customUpdatableType(@NotNull Identifier registryId) {
+        return CUSTOM_TYPES.computeIfAbsent(registryId, CustomUpdatableEntityType::new);
     }
 
-    private static void writeIdentifyingData(@NotNull BlockPos pos, @NotNull UpdatableBlockEntityType type,
+    private static void writeIdentifyingData(@NotNull BlockPos pos, @NotNull FakeBlocks.UpdatableEntityType type,
             @NotNull CompoundTag tag) {
         tag.putString("id", type.getRegistryId().toString());
         tag.putInt("x", pos.getX());
@@ -112,12 +112,12 @@ public final class FakeBlockUtil {
 
     /**
      * This method only works with certain block entities that have special behavior for syncing with clients
-     * (I.E. those specified in the {@link UpdatableBlockEntityTypes} enum, or which implement {@link BlockEntityClientSerializable}).<br>
+     * (I.E. those specified in the {@link UpdatableEntityTypes} enum, or which implement {@link BlockEntityClientSerializable}).<br>
      * Other block entities rely on the chunk itself being sent to the player, which is beyond the scope of this utility library
      * (and also your mod, probably).
      */
     public static void sendFakeBlockEntity(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos,
-            @NotNull UpdatableBlockEntityType type, @NotNull CompoundTag tag,
+            @NotNull FakeBlocks.UpdatableEntityType type, @NotNull CompoundTag tag,
             @Nullable GenericFutureListener<? extends Future<? super Void>> listener) {
         if (!player.notInAnyWorld && World.isValid(pos)) {
             CompoundTag copy = tag.copy();
@@ -128,12 +128,12 @@ public final class FakeBlockUtil {
 
     /**
      * This method only works with certain block entities that have special behavior for syncing with clients
-     * (I.E. those specified in the {@link UpdatableBlockEntityTypes} enum, or which implement {@link BlockEntityClientSerializable}).<br>
+     * (I.E. those specified in the {@link UpdatableEntityTypes} enum, or which implement {@link BlockEntityClientSerializable}).<br>
      * Other block entities rely on the chunk itself being sent to the player, which is beyond the scope of this utility library
      * (and also your mod, probably).
      */
     public static void sendFakeBlockEntity(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos,
-            @NotNull UpdatableBlockEntityType type, @NotNull CompoundTag tag) {
+            @NotNull FakeBlocks.UpdatableEntityType type, @NotNull CompoundTag tag) {
         sendFakeBlockEntity(player, pos, type, tag, null);
     }
 
@@ -176,7 +176,7 @@ public final class FakeBlockUtil {
 
     /**
      * This method only works with certain block entities that have special behavior for syncing with clients
-     * (I.E. those specified in the {@link UpdatableBlockEntityTypes} enum, or which implement {@link BlockEntityClientSerializable}).<br>
+     * (I.E. those specified in the {@link UpdatableEntityTypes} enum, or which implement {@link BlockEntityClientSerializable}).<br>
      * Other block entities rely on the chunk itself being sent to the player, which is beyond the scope of this utility library
      * (and also your mod, probably).
      */
@@ -191,7 +191,7 @@ public final class FakeBlockUtil {
 
     /**
      * This method only works with certain block entities that have special behavior for syncing with clients
-     * (I.E. those specified in the {@link UpdatableBlockEntityTypes} enum, or which implement {@link BlockEntityClientSerializable}).<br>
+     * (I.E. those specified in the {@link UpdatableEntityTypes} enum, or which implement {@link BlockEntityClientSerializable}).<br>
      * Other block entities rely on the chunk itself being sent to the player, which is beyond the scope of this utility library
      * (and also your mod, probably).
      */

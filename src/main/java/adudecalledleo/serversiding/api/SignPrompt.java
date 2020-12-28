@@ -1,6 +1,6 @@
-package adudecalledleo.serversiding.util;
+package adudecalledleo.serversiding.api;
 
-import adudecalledleo.serversiding.impl.SignEditPromptData;
+import adudecalledleo.serversiding.impl.SignPromptStorage;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundTag;
@@ -11,7 +11,7 @@ import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 
-public final class SignEditPrompt {
+public final class SignPrompt {
     public static final class Result {
         private final boolean successful;
         private final Text[] lines;
@@ -53,7 +53,7 @@ public final class SignEditPrompt {
         void accept(@NotNull Result result);
     }
 
-    public enum SignType {
+    public enum Type {
         OAK(Blocks.OAK_SIGN.getDefaultState()),
         SPRUCE(Blocks.SPRUCE_SIGN.getDefaultState()),
         BIRCH(Blocks.BIRCH_SIGN.getDefaultState()),
@@ -63,7 +63,7 @@ public final class SignEditPrompt {
 
         private final BlockState blockState;
 
-        SignType(BlockState blockState) {
+        Type(BlockState blockState) {
             this.blockState = blockState;
         }
 
@@ -73,8 +73,8 @@ public final class SignEditPrompt {
     }
 
     public static void open(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos, @NotNull Callback callback,
-            @NotNull SignType signType, @NotNull DyeColor textColor, @NotNull Text... initialLines) {
-        SignEditPromptData.Entry entry = SignEditPromptData.remove(player);
+            @NotNull SignPrompt.Type type, @NotNull DyeColor textColor, @NotNull Text... initialLines) {
+        SignPromptStorage.Entry entry = SignPromptStorage.remove(player);
         if (entry != null)
             entry.fail();
 
@@ -87,9 +87,9 @@ public final class SignEditPrompt {
         }
         tag.putString("Color", textColor.getName());
 
-        FakeBlockUtil.sendFakeBlock(player, pos, signType.getBlockState(), future ->
-                FakeBlockUtil.sendFakeBlockEntity(player, pos, FakeBlockUtil.UpdatableBlockEntityTypes.SIGN, tag,
+        FakeBlocks.sendFakeBlock(player, pos, type.getBlockState(), future ->
+                FakeBlocks.sendFakeBlockEntity(player, pos, FakeBlocks.UpdatableEntityTypes.SIGN, tag,
                         future1 -> player.networkHandler.sendPacket(new SignEditorOpenS2CPacket(pos), future2 ->
-                                SignEditPromptData.add(player, pos, callback))));
+                                SignPromptStorage.add(player, pos, callback))));
     }
 }

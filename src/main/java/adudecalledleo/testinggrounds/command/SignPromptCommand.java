@@ -1,6 +1,6 @@
 package adudecalledleo.testinggrounds.command;
 
-import adudecalledleo.serversiding.util.SignEditPrompt;
+import adudecalledleo.serversiding.api.SignPrompt;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.server.command.ServerCommandSource;
@@ -19,7 +19,7 @@ class SignPromptCommand {
         ServerCommandSource src = ctx.getSource();
         ServerPlayerEntity player = src.getPlayer();
 
-        SignEditPrompt.open(player, player.getBlockPos(), result -> {
+        SignPrompt.open(player, player.getBlockPos(), result -> {
             if (result.isSuccessful()) {
                 for (int i = 0; i < result.getLineCount(); i++)
                     player.sendMessage(new LiteralText("Line " + (i + 1) + ": ").append(result.getLine(i)),
@@ -29,7 +29,7 @@ class SignPromptCommand {
                 player.sendMessage(new LiteralText("Failed to get input from sign!")
                         .styled(style -> style.withColor(Formatting.RED)), false);
             }
-        }, SignEditPrompt.SignType.OAK, DyeColor.BLACK,
+        }, SignPrompt.Type.OAK, DyeColor.BLACK,
                 new LiteralText("Test!"), new LiteralText("Test 2!"),
                 new LiteralText("Test the Third!"), new LiteralText("Test IV!"));
 

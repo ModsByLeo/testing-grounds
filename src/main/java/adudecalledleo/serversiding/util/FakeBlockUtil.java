@@ -38,26 +38,29 @@ public final class FakeBlockUtil {
     }
 
     public enum UpdatableBlockEntityTypes implements UpdatableBlockEntityType {
-        MOB_SPAWNER(BlockEntityType.getId(BlockEntityType.MOB_SPAWNER), 1),
-        COMMAND_BLOCK(BlockEntityType.getId(BlockEntityType.COMMAND_BLOCK), 2),
-        BEACON(BlockEntityType.getId(BlockEntityType.BEACON), 3),
-        SKULL(BlockEntityType.getId(BlockEntityType.SKULL), 4),
-        CONDUIT(BlockEntityType.getId(BlockEntityType.CONDUIT), 5),
-        BANNER(BlockEntityType.getId(BlockEntityType.BANNER), 6),
-        STRUCTURE_BLOCK(BlockEntityType.getId(BlockEntityType.STRUCTURE_BLOCK), 7),
-        END_GATEWAY(BlockEntityType.getId(BlockEntityType.END_GATEWAY), 8),
-        SIGN(BlockEntityType.getId(BlockEntityType.SIGN), 9),
+        MOB_SPAWNER(BlockEntityType.MOB_SPAWNER, 1),
+        COMMAND_BLOCK(BlockEntityType.COMMAND_BLOCK, 2),
+        BEACON(BlockEntityType.BEACON, 3),
+        SKULL(BlockEntityType.SKULL, 4),
+        CONDUIT(BlockEntityType.CONDUIT, 5),
+        BANNER(BlockEntityType.BANNER, 6),
+        STRUCTURE_BLOCK(BlockEntityType.STRUCTURE_BLOCK, 7),
+        END_GATEWAY(BlockEntityType.END_GATEWAY, 8),
+        SIGN(BlockEntityType.SIGN, 9),
         // 10 is missing (possibly used to be Note Block?)
-        BED(BlockEntityType.getId(BlockEntityType.BED), 11),
-        JIGSAW_BLOCK(BlockEntityType.getId(BlockEntityType.JIGSAW), 12),
-        CAMPFIRE(BlockEntityType.getId(BlockEntityType.CAMPFIRE), 13);
+        BED(BlockEntityType.BED, 11),
+        JIGSAW_BLOCK(BlockEntityType.JIGSAW, 12),
+        CAMPFIRE(BlockEntityType.CAMPFIRE, 13);
 
         private final Identifier registryId;
         private final int updatePacketId;
 
-        UpdatableBlockEntityTypes(Identifier registryId, int updatePacketId) {
-            this.registryId = registryId;
+        UpdatableBlockEntityTypes(BlockEntityType<?> blockEntityType, int updatePacketId) {
+            registryId = BlockEntityType.getId(blockEntityType);
             this.updatePacketId = updatePacketId;
+
+            if (registryId == null)
+                throw new RuntimeException("Vanilla block entity type \"" + name() + "\" is not registered?!");
         }
 
         @Override

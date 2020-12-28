@@ -8,13 +8,20 @@ import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.opengl.GL11;
 
+import java.util.Optional;
+
 public interface GooeyRenderContext {
     static @NotNull GooeyRenderContext get() {
         return GooeyRenderContextImpl.getInstance();
     }
 
+    interface Closeable extends AutoCloseable {
+        @Override
+        void close();
+    }
+
     interface MatrixStack {
-        void push();
+        @NotNull Closeable push();
         void pop();
         boolean isEmpty();
 
@@ -36,6 +43,9 @@ public interface GooeyRenderContext {
                 disable();
         }
     }
+
+    @NotNull Closeable pushToggleableStates();
+    void popToggleableStates();
 
     interface ScissorManager extends Toggleable {
         void setRect(int x, int y, int w, int h);
@@ -106,6 +116,14 @@ public interface GooeyRenderContext {
 
     @NotNull VertexConsumer begin(int drawMode);
 
+    interface Extension {
+        Identifier getId();
+        void initialize(GooeyRenderContext ctx);
+        void terminate();
+    }
+
+    @NotNull <T extends Extension> Optional<T> getExtension(@NotNull Class<T> type);
+
     default void fill(float x, float y, float w, float h, int color) {
         int r = ColorUtil.unpackRed(color);
         int g = ColorUtil.unpackGreen(color);
@@ -118,16 +136,6 @@ public interface GooeyRenderContext {
 
     // TODO This doesn't render. Why?
     default void fillGradient(float x, float y, float w, float h, int color1, int color2) {
-        boolean smoothShadingEnabled = isSmoothShading();
-        boolean blendEnabled = blendManager().isEnabled();
-        boolean alphaTestEnabled = alphaTestManager().isEnabled();
-        boolean textureEnabled = textureManager().isEnabled();
-        setSmoothShading(true);
-        blendManager().enable();
-        blendManager().setDefaultFunction();
-        alphaTestManager().disable();
-        textureManager().disable();
-
         int r1 = ColorUtil.unpackRed(color1);
         int g1 = ColorUtil.unpackGreen(color1);
         int b1 = ColorUtil.unpackBlue(color1);
@@ -138,28 +146,30 @@ public interface GooeyRenderContext {
         int b2 = ColorUtil.unpackBlue(color2);
         int a2 = ColorUtil.unpackAlpha(color2);
 
-        VertexConsumer consumer = begin(GL11.GL_QUADS);
-        VertexBuilder.buildQuad(consumer, (consumer1, id, x1, y1) -> {
-            if (id < 2)
-                consumer1.color(r1, g1, b1, a1);
-            else
-                consumer1.color(r2, g2, b2, a2);
-        }, x, y, w, h).end();
+        try (Closeable ignored = pushToggleableStates()) {
+            setSmoothShading(true);
+            blendManager().enable();
+            blendManager().setDefaultFunction();
+            alphaTestManager().disable();
+            textureManager().disable();
 
-        textureManager().setEnabled(textureEnabled);
-        alphaTestManager().setEnabled(alphaTestEnabled);
-        blendManager().setEnabled(blendEnabled);
-        setSmoothShading(smoothShadingEnabled);
+            VertexConsumer consumer = begin(GL11.GL_QUADS);
+            VertexBuilder.buildQuad(consumer, (consumer1, id, x1, y1) -> {
+                if (id < 2)
+                    consumer1.color(r1, g1, b1, a1);
+                else
+                    consumer1.color(r2, g2, b2, a2);
+            }, x, y, w, h).end();
+        }
     }
 
     default void drawTexture(Identifier id, float x, float y, int w, int h) {
-        boolean textureManagerEnabled = textureManager().isEnabled();
-        textureManager().enable();
+        try (Closeable ignored = pushToggleableStates()) {
+            textureManager().enable();
 
-        textureManager().bind(id);
-        VertexConsumer consumer = begin(GL11.GL_QUADS);
-        VertexBuilder.buildQuad(consumer, VertexBuilder.textureQuad(0, 0, w, h, w, h), x, y, w, h).end();
-
-        textureManager().setEnabled(textureManagerEnabled);
+            textureManager().bind(id);
+            VertexConsumer consumer = begin(GL11.GL_QUADS);
+            VertexBuilder.buildQuad(consumer, VertexBuilder.textureQuad(0, 0, w, h, w, h), x, y, w, h).end();
+        }
     }
 }

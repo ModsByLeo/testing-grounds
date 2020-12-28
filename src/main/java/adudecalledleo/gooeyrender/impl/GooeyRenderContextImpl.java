@@ -2,6 +2,7 @@ package adudecalledleo.gooeyrender.impl;
 
 import adudecalledleo.gooeyrender.api.GooeyRenderContext;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.lwjgl.opengl.GL11;
 
 import java.util.List;
+import java.util.Optional;
 
 @ApiStatus.Internal
 public final class GooeyRenderContextImpl implements GooeyRenderContext {
@@ -39,8 +41,9 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
         }
 
         @Override
-        public void push() {
+        public @NotNull Closeable push() {
             delegate.push();
+            return this::pop;
         }
 
         @Override
@@ -173,7 +176,7 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
         }
     }
 
-    private final class AlphaTestManagerImpl extends ToggleableImpl implements AlphaTestManager {
+    private static final class AlphaTestManagerImpl extends ToggleableImpl implements AlphaTestManager {
         @Override
         public void setFunction(int function, float reference) {
             //noinspection deprecation
@@ -314,6 +317,70 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
         isReady = false;
     }
 
+    public enum ToggleableState {
+        SCISSOR_MANAGER,
+        BLEND_MANAGER,
+        ALPHA_TEST_MANAGER,
+        TEXTURE_MANAGER;
+
+        public boolean isEnabled(GooeyRenderContextImpl ctx) {
+            switch (this) {
+            case SCISSOR_MANAGER:
+                return ctx.scissorManager.enabled;
+            case BLEND_MANAGER:
+                return ctx.blendManager.enabled;
+            case ALPHA_TEST_MANAGER:
+                return ctx.alphaTestManager.enabled;
+            case TEXTURE_MANAGER:
+                return ctx.textureManager.enabled;
+            default:
+                return false;
+            }
+        }
+
+        public void setEnabled(GooeyRenderContextImpl ctx, boolean enabled) {
+            switch (this) {
+            case SCISSOR_MANAGER:
+                ctx.scissorManager.setEnabled(enabled);
+                break;
+            case BLEND_MANAGER:
+                ctx.blendManager.setEnabled(enabled);
+                break;
+            case ALPHA_TEST_MANAGER:
+                ctx.alphaTestManager.setEnabled(enabled);
+                break;
+            case TEXTURE_MANAGER:
+                ctx.textureManager.setEnabled(enabled);
+                break;
+            }
+        }
+
+        public int mask() {
+            return 1 << ordinal();
+        }
+    }
+    private static final ToggleableState[] STATES = ToggleableState.values();
+
+    private final LongArrayList toggleableStateStack = new LongArrayList();
+
+    @Override
+    public @NotNull Closeable pushToggleableStates() {
+        long bitfield = 0;
+        for (ToggleableState state : STATES) {
+            if (state.isEnabled(this))
+                bitfield |= state.mask();
+        }
+        toggleableStateStack.add(bitfield);
+        return this::popToggleableStates;
+    }
+
+    @Override
+    public void popToggleableStates() {
+        long bitfield = toggleableStateStack.removeLong(toggleableStateStack.size() - 1);
+        for (ToggleableState state : STATES)
+            state.setEnabled(this, (bitfield & state.mask()) != 0);
+    }
+
     @Override
     public boolean isReady() {
         return isReady;
@@ -369,5 +436,11 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     @Override
     public @NotNull VertexConsumer begin(int drawMode) {
         return new VertexConsumerImpl(drawMode);
+    }
+
+    @Override
+    public @NotNull <T extends Extension> Optional<T> getExtension(@NotNull Class<T> type) {
+        // TODO implement this
+        return Optional.empty();
     }
 }

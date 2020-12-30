@@ -14,5 +14,6 @@ public final class ModCommands {
     private static void initCommands(CommandDispatcher<ServerCommandSource> dispatcher, boolean dedicated) {
         dispatcher.register(literal("mailbox").executes(MailboxCommand::execute));
         dispatcher.register(literal("signprompt").executes(SignPromptCommand::execute));
+        dispatcher.register(literal("menu").executes(MenuCommand::execute));
     }
 }

@@ -1,14 +1,12 @@
 package adudecalledleo.serversiding.impl;
 
-import adudecalledleo.serversiding.util.FakeBlocks;
 import adudecalledleo.serversiding.input.SignPrompt;
+import adudecalledleo.serversiding.util.FakeBlocks;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
-import org.jetbrains.annotations.ApiStatus;
 
-@ApiStatus.Internal
 public final class SignPromptStorage {
     private static final Reference2ReferenceOpenHashMap<ServerPlayerEntity, Entry> ENTRIES =
             new Reference2ReferenceOpenHashMap<>();

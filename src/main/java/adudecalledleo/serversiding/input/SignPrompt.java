@@ -54,7 +54,7 @@ public final class SignPrompt {
         void accept(@NotNull Result result);
     }
 
-    public enum Type {
+    public enum Background {
         OAK(Blocks.OAK_SIGN.getDefaultState()),
         SPRUCE(Blocks.SPRUCE_SIGN.getDefaultState()),
         BIRCH(Blocks.BIRCH_SIGN.getDefaultState()),
@@ -64,7 +64,7 @@ public final class SignPrompt {
 
         private final BlockState blockState;
 
-        Type(BlockState blockState) {
+        Background(BlockState blockState) {
             this.blockState = blockState;
         }
 
@@ -74,7 +74,7 @@ public final class SignPrompt {
     }
 
     public static void open(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos, @NotNull Callback callback,
-            @NotNull SignPrompt.Type type, @NotNull DyeColor textColor, @NotNull Text... initialLines) {
+            @NotNull SignPrompt.Background background, @NotNull DyeColor textColor, @NotNull Text... initialLines) {
         SignPromptStorage.Entry entry = SignPromptStorage.remove(player);
         if (entry != null)
             entry.fail();
@@ -88,7 +88,7 @@ public final class SignPrompt {
         }
         tag.putString("Color", textColor.getName());
 
-        FakeBlocks.sendFakeBlock(player, pos, type.getBlockState(), future ->
+        FakeBlocks.sendFakeBlock(player, pos, background.getBlockState(), future ->
                 FakeBlocks.sendFakeBlockEntity(player, pos, FakeBlocks.UpdatableEntityTypes.SIGN, tag,
                         future1 -> player.networkHandler.sendPacket(new SignEditorOpenS2CPacket(pos), future2 ->
                                 SignPromptStorage.add(player, pos, callback))));

@@ -29,7 +29,7 @@ class SignPromptCommand {
                 player.sendMessage(new LiteralText("Failed to get input from sign!")
                         .styled(style -> style.withColor(Formatting.RED)), false);
             }
-        }, SignPrompt.Type.OAK, DyeColor.BLACK,
+        }, SignPrompt.Background.OAK, DyeColor.BLACK,
                 new LiteralText("Test!"), new LiteralText("Test 2!"),
                 new LiteralText("Test the Third!"), new LiteralText("Test IV!"));
 

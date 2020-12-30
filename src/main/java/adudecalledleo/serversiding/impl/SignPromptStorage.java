@@ -1,7 +1,7 @@
 package adudecalledleo.serversiding.impl;
 
-import adudecalledleo.serversiding.api.FakeBlocks;
-import adudecalledleo.serversiding.api.SignPrompt;
+import adudecalledleo.serversiding.util.FakeBlocks;
+import adudecalledleo.serversiding.input.SignPrompt;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;

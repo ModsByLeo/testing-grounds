@@ -1,4 +1,4 @@
-package adudecalledleo.serversiding.api;
+package adudecalledleo.serversiding.util;
 
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;

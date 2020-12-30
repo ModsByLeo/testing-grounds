@@ -1,6 +1,7 @@
-package adudecalledleo.serversiding.api;
+package adudecalledleo.serversiding.input;
 
 import adudecalledleo.serversiding.impl.SignPromptStorage;
+import adudecalledleo.serversiding.util.FakeBlocks;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.nbt.CompoundTag;

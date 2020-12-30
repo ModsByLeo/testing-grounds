@@ -1,6 +1,6 @@
 package adudecalledleo.testinggrounds.command;
 
-import adudecalledleo.serversiding.api.SignPrompt;
+import adudecalledleo.serversiding.input.SignPrompt;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.server.command.ServerCommandSource;

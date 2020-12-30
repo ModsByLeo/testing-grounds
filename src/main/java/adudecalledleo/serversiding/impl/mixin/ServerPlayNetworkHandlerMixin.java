@@ -1,4 +1,4 @@
-package adudecalledleo.serversiding.mixin;
+package adudecalledleo.serversiding.impl.mixin;
 
 import adudecalledleo.serversiding.impl.SignPromptStorage;
 import net.minecraft.network.packet.c2s.play.UpdateSignC2SPacket;
@@ -7,6 +7,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import org.jetbrains.annotations.ApiStatus;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -16,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
 
+@ApiStatus.Internal
 @Mixin(ServerPlayNetworkHandler.class)
 public abstract class ServerPlayNetworkHandlerMixin {
     @Shadow public ServerPlayerEntity player;

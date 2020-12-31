@@ -68,7 +68,7 @@ public final class SignPrompt {
             this.blockState = blockState;
         }
 
-        public BlockState getBlockState() {
+        public @NotNull BlockState getBlockState() {
             return blockState;
         }
     }

@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class EnumButton<V extends Enum<V>> implements Button {
-    public static <V extends Enum<V>> @NotNull Button of(
-            @NotNull EnumButton.StateAccessor<V> stateAccessor, @NotNull EnumButton.StackProvider<V> stackProvider) {
+    public static <V extends Enum<V>> @NotNull Button of(@NotNull EnumButton.StateAccessor<V> stateAccessor,
+            @NotNull EnumButton.StackProvider<V> stackProvider) {
         return new EnumButton<>(stateAccessor, stackProvider);
     }
 
@@ -32,11 +32,11 @@ public final class EnumButton<V extends Enum<V>> implements Button {
     public interface StateAccessor<V extends Enum<V>> extends ValueGetter<V>, ValueSetter<V> {
         void cycleValue(@NotNull MenuState menuState);
 
-        static <V extends Enum<V>> @NotNull StateAccessor<V> of(Class<V> background, ValueGetter<V> supplier, ValueSetter<V> consumer) {
-            if (background.getEnumConstants() == null)
-                throw new IllegalArgumentException("Type " + background + " is not an enum!");
+        static <V extends Enum<V>> @NotNull StateAccessor<V> of(Class<V> type, ValueGetter<V> supplier, ValueSetter<V> consumer) {
+            if (type.getEnumConstants() == null)
+                throw new IllegalArgumentException(type + " is not an enum!");
             return new StateAccessor<V>() {
-                private final V[] values = background.getEnumConstants();
+                private final V[] values = type.getEnumConstants();
 
                 @Override
                 public @NotNull V getValue() {

@@ -2,7 +2,6 @@ package adudecalledleo.gooeyrender.impl;
 
 import adudecalledleo.gooeyrender.api.GooeyRenderContext;
 import com.mojang.blaze3d.systems.RenderSystem;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
@@ -18,6 +17,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.opengl.GL11;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -150,19 +150,28 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     }
 
     private static final class BlendManagerImpl extends ToggleableImpl implements BlendManager {
+        private int srcFactor, dstFactor;
+        private int srcAlpha, dstAlpha;
+
         @Override
         public void setFunction(int srcFactor, int dstFactor) {
             RenderSystem.blendFunc(srcFactor, dstFactor);
+            this.srcFactor = srcFactor;
+            this.dstFactor = dstFactor;
         }
 
         @Override
-        public void setFunctionSeparate(int srcFactorRGB, int dstFactorRGB, int srcFactorAlpha, int dstFactorAlpha) {
-            RenderSystem.blendFuncSeparate(srcFactorRGB, dstFactorRGB, srcFactorAlpha, dstFactorAlpha);
+        public void setFunctionSeparate(int srcFactor, int dstFactor, int srcAlpha, int dstAlpha) {
+            RenderSystem.blendFuncSeparate(srcFactor, dstFactor, srcAlpha, dstAlpha);
+            this.srcFactor = srcFactor;
+            this.dstFactor = dstFactor;
+            this.srcAlpha = srcAlpha;
+            this.dstAlpha = dstAlpha;
         }
 
         @Override
         public void setDefaultFunction() {
-            RenderSystem.defaultBlendFunc();
+            setFunctionSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
         }
 
         @Override
@@ -177,15 +186,21 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     }
 
     private static final class AlphaTestManagerImpl extends ToggleableImpl implements AlphaTestManager {
+        private int function;
+        private float reference;
+
         @Override
         public void setFunction(int function, float reference) {
             //noinspection deprecation
             RenderSystem.alphaFunc(function, reference);
+            this.function = function;
+            this.reference = reference;
         }
 
         @Override
         public void setDefaultFunction() {
-            RenderSystem.defaultAlphaFunc();
+            //RenderSystem.defaultAlphaFunc();
+            setFunction(GL11.GL_GREATER, 0.1F);
         }
 
         @Override
@@ -219,10 +234,13 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
         }
 
         private void draw0(OrderedText text, int x, int y, int color, boolean shadow) {
+            matrixStack.delegate.push();
+            matrixStack.delegate.translate(x, y, zOffset);
             VertexConsumerProvider.Immediate immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().getBuffer());
-            delegate.draw(text, x, y, color, shadow,
+            delegate.draw(text, 0, 0, color, shadow,
                     matrixStack.delegate.peek().getModel(), immediate, false, 0, 0xF000F0);
             immediate.draw();
+            matrixStack.delegate.pop();
         }
 
         @Override
@@ -257,7 +275,7 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
 
         @Override
         public @NotNull VertexConsumer vertex(float x, float y) {
-            delegate.vertex(matrixStack.delegate.peek().getModel(), x, y, 0);
+            delegate.vertex(matrixStack.delegate.peek().getModel(), x, y, zOffset);
             return this;
         }
 
@@ -294,6 +312,7 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     private boolean isReady;
     private float tickDelta;
 
+    private float zOffset;
     private boolean smoothShading;
 
     private GooeyRenderContextImpl() {
@@ -311,74 +330,68 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
 
         scissorManager.disable();
         textureManager.disable();
+        blendManager.enable();
+        blendManager.setDefaultFunction();
+        alphaTestManager.enable();
+        alphaTestManager.setDefaultFunction();
+        setSmoothShading(false);
+        setZOffset(-200);
     }
 
     public void invalidate() {
         isReady = false;
     }
 
-    public enum ToggleableState {
-        SCISSOR_MANAGER,
-        BLEND_MANAGER,
-        ALPHA_TEST_MANAGER,
-        TEXTURE_MANAGER;
+    private final class SavedState {
+        private final boolean scissorEnabled;
+        private final boolean blendEnabled;
+        private final int blendSrcFactor, blendDstFactor;
+        private final int blendSrcAlpha, blendDstAlpha;
+        private final boolean alphaTestEnabled;
+        private final int alphaTestFunction;
+        private final float alphaTestReference;
+        private final boolean textureEnabled;
+        private final boolean smoothShadingEnabled;
+        private final float zOffset;
 
-        public boolean isEnabled(GooeyRenderContextImpl ctx) {
-            switch (this) {
-            case SCISSOR_MANAGER:
-                return ctx.scissorManager.enabled;
-            case BLEND_MANAGER:
-                return ctx.blendManager.enabled;
-            case ALPHA_TEST_MANAGER:
-                return ctx.alphaTestManager.enabled;
-            case TEXTURE_MANAGER:
-                return ctx.textureManager.enabled;
-            default:
-                return false;
-            }
+        public SavedState() {
+            scissorEnabled = scissorManager.enabled;
+            blendEnabled = blendManager.enabled;
+            blendSrcFactor = blendManager.srcFactor;
+            blendDstFactor = blendManager.dstFactor;
+            blendSrcAlpha = blendManager.srcAlpha;
+            blendDstAlpha = blendManager.dstAlpha;
+            alphaTestEnabled = alphaTestManager.enabled;
+            alphaTestFunction = alphaTestManager.function;
+            alphaTestReference = alphaTestManager.reference;
+            textureEnabled = textureManager.enabled;
+            smoothShadingEnabled = smoothShading;
+            zOffset = GooeyRenderContextImpl.this.zOffset;
         }
 
-        public void setEnabled(GooeyRenderContextImpl ctx, boolean enabled) {
-            switch (this) {
-            case SCISSOR_MANAGER:
-                ctx.scissorManager.setEnabled(enabled);
-                break;
-            case BLEND_MANAGER:
-                ctx.blendManager.setEnabled(enabled);
-                break;
-            case ALPHA_TEST_MANAGER:
-                ctx.alphaTestManager.setEnabled(enabled);
-                break;
-            case TEXTURE_MANAGER:
-                ctx.textureManager.setEnabled(enabled);
-                break;
-            }
-        }
-
-        public int mask() {
-            return 1 << ordinal();
+        public void load() {
+            scissorManager.setEnabled(scissorEnabled);
+            blendManager.setEnabled(blendEnabled);
+            blendManager.setFunctionSeparate(blendSrcFactor, blendDstFactor, blendSrcAlpha, blendDstAlpha);
+            alphaTestManager.setEnabled(alphaTestEnabled);
+            alphaTestManager.setFunction(alphaTestFunction, alphaTestReference);
+            textureManager.setEnabled(textureEnabled);
+            setSmoothShading(smoothShadingEnabled);
+            GooeyRenderContextImpl.this.zOffset = zOffset;
         }
     }
-    private static final ToggleableState[] STATES = ToggleableState.values();
 
-    private final LongArrayList toggleableStateStack = new LongArrayList();
+    private final ArrayList<SavedState> stateStack = new ArrayList<>();
 
     @Override
-    public @NotNull Closeable pushToggleableStates() {
-        long bitfield = 0;
-        for (ToggleableState state : STATES) {
-            if (state.isEnabled(this))
-                bitfield |= state.mask();
-        }
-        toggleableStateStack.add(bitfield);
-        return this::popToggleableStates;
+    public @NotNull Closeable pushState() {
+        stateStack.add(new SavedState());
+        return this::popState;
     }
 
     @Override
-    public void popToggleableStates() {
-        long bitfield = toggleableStateStack.removeLong(toggleableStateStack.size() - 1);
-        for (ToggleableState state : STATES)
-            state.setEnabled(this, (bitfield & state.mask()) != 0);
+    public void popState() {
+        stateStack.remove(stateStack.size() - 1).load();
     }
 
     @Override
@@ -389,6 +402,16 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     @Override
     public float tickDelta() {
         return tickDelta;
+    }
+
+    @Override
+    public float getZOffset() {
+        return zOffset;
+    }
+
+    @Override
+    public void setZOffset(float zOffset) {
+        this.zOffset = zOffset;
     }
 
     @Override

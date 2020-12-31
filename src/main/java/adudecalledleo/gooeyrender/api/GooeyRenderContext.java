@@ -44,8 +44,8 @@ public interface GooeyRenderContext {
         }
     }
 
-    @NotNull Closeable pushToggleableStates();
-    void popToggleableStates();
+    @NotNull Closeable pushState();
+    void popState();
 
     interface ScissorManager extends Toggleable {
         void setRect(int x, int y, int w, int h);
@@ -53,7 +53,7 @@ public interface GooeyRenderContext {
 
     interface BlendManager extends Toggleable {
         void setFunction(int srcFactor, int dstFactor);
-        void setFunctionSeparate(int srcFactorRGB, int dstFactorRGB, int srcFactorAlpha, int dstFactorAlpha);
+        void setFunctionSeparate(int srcFactor, int dstFactor, int srcAlpha, int dstAlpha);
         void setDefaultFunction();
     }
 
@@ -104,6 +104,13 @@ public interface GooeyRenderContext {
     boolean isReady();
     float tickDelta();
 
+    float getZOffset();
+    void setZOffset(float zOffset);
+
+    default void addZOffset(float zOffset) {
+        setZOffset(getZOffset() + zOffset);
+    }
+
     boolean isSmoothShading();
     void setSmoothShading(boolean smoothShading);
 
@@ -130,8 +137,14 @@ public interface GooeyRenderContext {
         int b = ColorUtil.unpackBlue(color);
         int a = ColorUtil.unpackAlpha(color);
 
-        VertexConsumer consumer = begin(GL11.GL_QUADS);
-        VertexBuilder.buildQuad(consumer, VertexBuilder.color(r, g, b, a), x, y, w, h).end();
+        try (Closeable ignored = pushState()) {
+            blendManager().enable();
+            blendManager().setDefaultFunction();
+            textureManager().disable();
+
+            VertexConsumer consumer = begin(GL11.GL_QUADS);
+            VertexBuilder.buildQuad(consumer, VertexBuilder.color(r, g, b, a), x, y, w, h).end();
+        }
     }
 
     // TODO This doesn't render. Why?
@@ -146,7 +159,7 @@ public interface GooeyRenderContext {
         int b2 = ColorUtil.unpackBlue(color2);
         int a2 = ColorUtil.unpackAlpha(color2);
 
-        try (Closeable ignored = pushToggleableStates()) {
+        try (Closeable ignored = pushState()) {
             setSmoothShading(true);
             blendManager().enable();
             blendManager().setDefaultFunction();
@@ -164,7 +177,7 @@ public interface GooeyRenderContext {
     }
 
     default void drawTexture(Identifier id, float x, float y, int w, int h) {
-        try (Closeable ignored = pushToggleableStates()) {
+        try (Closeable ignored = pushState()) {
             textureManager().enable();
 
             textureManager().bind(id);

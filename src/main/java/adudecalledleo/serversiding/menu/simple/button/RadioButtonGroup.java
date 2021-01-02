@@ -3,6 +3,7 @@ package adudecalledleo.serversiding.menu.simple.button;
 import adudecalledleo.lionutils.item.ItemStackBuilder;
 import adudecalledleo.serversiding.menu.simple.MenuState;
 import adudecalledleo.serversiding.menu.simple.SimpleMenuHandler;
+import adudecalledleo.serversiding.util.TextUtils;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import net.minecraft.item.Items;
 import net.minecraft.text.LiteralText;
@@ -12,8 +13,6 @@ import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.IntFunction;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class RadioButtonGroup {
     public static @NotNull RadioButtonGroup of(@NotNull RadioButtonGroup.ChoiceAccessor valueAccessor,
@@ -102,11 +101,7 @@ public final class RadioButtonGroup {
                         return ItemStackBuilder.create()
                                 .setItem(state ? Items.LIME_DYE : Items.GRAY_DYE)
                                 .setCustomName(name)
-                                .addLore(Stream.of(choiceInfoProvider.getChoiceDescription(choice))
-                                        .map(Text::shallowCopy)
-                                        .map(line -> line
-                                                .styled(style -> style.withColor(Formatting.GRAY).withItalic(true)))
-                                        .collect(Collectors.toList()))
+                                .addLore(TextUtils.toLore(choiceInfoProvider.getChoiceDescription(choice)))
                                 .build();
                     }
             ));

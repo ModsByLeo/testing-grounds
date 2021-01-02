@@ -2,6 +2,7 @@ package adudecalledleo.serversiding.menu.simple.button;
 
 import adudecalledleo.lionutils.item.ItemStackBuilder;
 import adudecalledleo.serversiding.menu.simple.MenuState;
+import adudecalledleo.serversiding.util.TextUtils;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.LiteralText;
@@ -9,9 +10,6 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class ToggleButton implements Button {
     public static @NotNull Button of(@NotNull ToggleButton.ValueAccessor valueAccessor, @NotNull StackProvider stackProvider) {
@@ -64,10 +62,7 @@ public final class ToggleButton implements Button {
                                     .styled(style -> style.withColor(state ? Formatting.GREEN : Formatting.RED)
                                             .withBold(true).withItalic(false))))
                     )
-                    .addLore(Stream.of(description)
-                            .map(Text::shallowCopy)
-                            .map(line -> line.styled(style -> style.withColor(Formatting.GRAY).withItalic(true)))
-                            .collect(Collectors.toList()))
+                    .addLore(TextUtils.toLore(description))
                     .build();
         }
     }

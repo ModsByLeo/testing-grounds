@@ -2,6 +2,7 @@ package adudecalledleo.serversiding.menu.simple.button;
 
 import adudecalledleo.lionutils.item.ItemStackBuilder;
 import adudecalledleo.serversiding.menu.simple.MenuState;
+import adudecalledleo.serversiding.util.TextUtils;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;
@@ -10,8 +11,6 @@ import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class EnumButton<V extends Enum<V>> implements Button {
     public static <V extends Enum<V>> @NotNull Button of(@NotNull EnumButton.ValueAccessor<V> valueAccessor,
@@ -70,19 +69,17 @@ public final class EnumButton<V extends Enum<V>> implements Button {
                                     .styled(style -> style.withColor(Formatting.BLUE).withBold(true).withItalic(false))
                             .append(new LiteralText(": ")
                                      .styled(style -> style.withColor(Formatting.GRAY).withBold(false).withItalic(false)))
-                            .append(stateNameFunction.apply(state).shallowCopy()
-                                        .styled(style -> style.withItalic(style.isItalic())))
+                            .append(TextUtils.ensureItalicSet(stateNameFunction.apply(state).shallowCopy()))
                     )
-                    .addLore(Stream.of(description)
-                            .map(Text::shallowCopy)
-                            .map(line -> line.styled(style -> style.withColor(Formatting.GRAY).withItalic(true)))
-                            .collect(Collectors.toList()))
+                    .addLore(TextUtils.toLore(description))
                     .build();
         }
 
         static <V extends Enum<V>> @NotNull StackProvider<V> simple(Function<V, Item> iconFunction,
                 Text name, Text... description) {
-            return simple(iconFunction, state -> new LiteralText(state.toString()), name, description);
+            return simple(iconFunction, state -> new LiteralText(state.toString())
+                    .styled(style -> style.withColor(Formatting.WHITE).withBold(true)),
+                    name, description);
         }
     }
 

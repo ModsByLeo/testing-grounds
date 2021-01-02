@@ -1,6 +1,7 @@
 package adudecalledleo.gooeyrender.impl;
 
 import adudecalledleo.gooeyrender.api.GooeyRenderContext;
+import com.google.common.collect.MutableClassToInstanceMap;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.BufferBuilder;
@@ -308,6 +309,7 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     private final AlphaTestManagerImpl alphaTestManager;
     private final TextureManagerImpl textureManager;
     private final TextRendererImpl textRenderer;
+    private final MutableClassToInstanceMap<Extension> extensionMap;
 
     private boolean isReady;
     private float tickDelta;
@@ -322,6 +324,7 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
         alphaTestManager = new AlphaTestManagerImpl();
         textureManager = new TextureManagerImpl();
         textRenderer = new TextRendererImpl();
+        extensionMap = MutableClassToInstanceMap.create();
     }
 
     public void setup(float tickDelta) {
@@ -463,7 +466,6 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
 
     @Override
     public @NotNull <T extends Extension> Optional<T> getExtension(@NotNull Class<T> type) {
-        // TODO implement this
-        return Optional.empty();
+        return Optional.ofNullable(extensionMap.getInstance(type));
     }
 }

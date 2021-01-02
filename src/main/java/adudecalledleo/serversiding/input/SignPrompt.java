@@ -74,7 +74,7 @@ public final class SignPrompt {
     }
 
     public static void open(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos, @NotNull Callback callback,
-            @NotNull SignPrompt.Background background, @NotNull DyeColor textColor, @NotNull Text... initialLines) {
+            @NotNull SignPrompt.Background background, @NotNull Text... initialLines) {
         SignPromptStorage.Entry entry = SignPromptStorage.remove(player);
         if (entry != null)
             entry.fail();
@@ -86,7 +86,7 @@ public final class SignPrompt {
                             ? Text.Serializer.toJson(initialLines[i])
                             : "");
         }
-        tag.putString("Color", textColor.getName());
+        tag.putString("Color", DyeColor.BLACK.getName());
 
         FakeBlocks.sendFakeBlock(player, pos, background.getBlockState(), future ->
                 FakeBlocks.sendFakeBlockEntity(player, pos, FakeBlocks.UpdatableEntityTypes.SIGN, tag,

@@ -72,7 +72,7 @@ class MenuCommand {
                                         new LiteralText("Couldn't get your name :(")
                                                 .styled(style -> style.withColor(Formatting.RED)),
                                         false);
-                        }, SignPrompt.Background.BIRCH, DyeColor.BLACK,
+                        }, SignPrompt.Background.BIRCH,
                                 new LiteralText("YAY!"),
                                 new LiteralText("Stick clicked!"),
                                 new LiteralText("Enter name below:"),

@@ -2,6 +2,7 @@ package adudecalledleo.serversiding.menu.simple;
 
 import adudecalledleo.serversiding.menu.MenuHandler;
 import adudecalledleo.serversiding.menu.simple.button.Button;
+import adudecalledleo.serversiding.menu.simple.button.Label;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import net.minecraft.inventory.Inventory;
@@ -16,21 +17,29 @@ public class SimpleMenuHandler implements MenuHandler {
     private final int rows;
     private final BackgroundPainter backgroundPainter;
 
-    private final IntArraySet allSlots;
     private final IntArraySet slotsToRepaint;
     private final MenuState menuState;
 
     private static final class SlotObject {
         enum Type {
-            BUTTON
+            BUTTON,
+            LABEL
         }
 
-        private final Type background;
+        private final Type type;
         private final Button button;
+        private final Label label;
 
         public SlotObject(Button button) {
-            background = Type.BUTTON;
+            type = Type.BUTTON;
             this.button = button;
+            label = null;
+        }
+
+        public SlotObject(Label label) {
+            type = Type.LABEL;
+            button = null;
+            this.label = label;
         }
     }
 
@@ -41,7 +50,7 @@ public class SimpleMenuHandler implements MenuHandler {
         this.backgroundPainter = backgroundPainter;
 
         objects = new Int2ReferenceOpenHashMap<>();
-        allSlots = new IntArraySet();
+        IntArraySet allSlots = new IntArraySet();
         for (int i = 0; i < 9 * rows; i++)
             allSlots.add(i);
         slotsToRepaint = new IntArraySet();
@@ -60,6 +69,10 @@ public class SimpleMenuHandler implements MenuHandler {
         objects.put(slot, new SlotObject(button));
     }
 
+    public void addLabel(int slot, @NotNull Label label) {
+        objects.put(slot, new SlotObject(label));
+    }
+
     @Override
     public int getRowCount() {
         return rows;
@@ -71,9 +84,14 @@ public class SimpleMenuHandler implements MenuHandler {
                 continue;
             if (objects.containsKey(slotId)) {
                 SlotObject object = objects.get(slotId);
-                switch (object.background) {
+                switch (object.type) {
                 case BUTTON:
                     inventory.setStack(slotId, object.button.getStack());
+                    break;
+                case LABEL:
+                    inventory.setStack(slotId, object.label.getStack());
+                    break;
+                default:
                     break;
                 }
             } else
@@ -93,9 +111,11 @@ public class SimpleMenuHandler implements MenuHandler {
         menuState.closeAndDoThis = null;
         if (objects.containsKey(slotId)) {
             SlotObject object = objects.get(slotId);
-            switch (object.background) {
+            switch (object.type) {
             case BUTTON:
                 object.button.onClick(menuState);
+                break;
+            default:
                 break;
             }
         }

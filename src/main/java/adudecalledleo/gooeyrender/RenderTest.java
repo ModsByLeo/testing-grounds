@@ -9,7 +9,7 @@ import net.minecraft.text.LiteralText;
 public class RenderTest implements HudRenderCallback {
     @Override
     public void onHudRender(MatrixStack matrixStack, float tickDelta) {
-        render();
+        //render();
     }
 
     private float angle;

@@ -4,9 +4,7 @@ import adudecalledleo.lionutils.item.ItemStackBuilder;
 import adudecalledleo.serversiding.input.SignPrompt;
 import adudecalledleo.serversiding.menu.MenuFactory;
 import adudecalledleo.serversiding.menu.simple.SimpleMenuHandler;
-import adudecalledleo.serversiding.menu.simple.button.Button;
-import adudecalledleo.serversiding.menu.simple.button.EnumButton;
-import adudecalledleo.serversiding.menu.simple.button.ToggleButton;
+import adudecalledleo.serversiding.menu.simple.button.*;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.item.Item;
@@ -54,11 +52,13 @@ class MenuCommand {
 
         private boolean testBool;
         private TestEnum testEnum;
+        private int testChoice;
 
         public MyMenuHandler() {
-            super(3, Items.WHITE_STAINED_GLASS_PANE);
+            super(5, Items.WHITE_STAINED_GLASS_PANE);
             testBool = true;
             testEnum = TestEnum.FOO;
+            testChoice = 0;
             addButton(slot(1, 2), Button.of(
                     (menuState) -> {
                         LOGGER.info("{}: stick was clicked!", this);
@@ -92,6 +92,18 @@ class MenuCommand {
                     EnumButton.StackProvider.simple(TestEnum::getIcon, TestEnum::getName, new LiteralText("Enum Test"),
                             new LiteralText("Test for enum buttons."),
                             new LiteralText("Does nothing."))));
+            addLabel(slot(3, 0), Label.of(Items.OAK_SIGN,
+                    new LiteralText("Radio Button Test"),
+                    new LiteralText("Test for radio choices!")));
+            RadioButtonGroup.of(
+                    RadioButtonGroup.ChoiceAccessor.of(() -> testChoice, (value, menuState) -> testChoice = value),
+                    RadioButtonGroup.ChoiceInfoProvider.of(value -> new LiteralText("Radio Choice " + (value + 1)),
+                            value -> new Text[] {
+                                    new LiteralText("Test for radio choices."),
+                                    new LiteralText("Does nothing.")
+                    })
+            ).addChoiceAt(slot(3, 2)).addChoiceAt(slot(3, 4)).addChoiceAt(slot(3, 6))
+                    .addTo(this);
         }
     }
 

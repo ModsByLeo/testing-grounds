@@ -33,7 +33,7 @@ public final class ToggleButton implements Button {
             setValue(!getValue(), menuState);
         }
 
-        static @NotNull ToggleButton.ValueAccessor of(ValueGetter getter, ValueSetter setter) {
+        static @NotNull ToggleButton.ValueAccessor of(@NotNull ValueGetter getter, @NotNull ValueSetter setter) {
             return new ValueAccessor() {
                 @Override
                 public boolean getValue() {

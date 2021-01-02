@@ -88,7 +88,7 @@ class MenuCommand {
                             new LiteralText("Test for toggle buttons."),
                             new LiteralText("Does nothing."))));
             addButton(slot(1, 6), EnumButton.of(
-                    EnumButton.StateAccessor.of(TestEnum.class, () -> testEnum, (value, menuState) -> testEnum = value),
+                    EnumButton.ValueAccessor.of(TestEnum.class, () -> testEnum, (value, menuState) -> testEnum = value),
                     EnumButton.StackProvider.simple(TestEnum::getIcon, TestEnum::getName, new LiteralText("Enum Test"),
                             new LiteralText("Test for enum buttons."),
                             new LiteralText("Does nothing."))));

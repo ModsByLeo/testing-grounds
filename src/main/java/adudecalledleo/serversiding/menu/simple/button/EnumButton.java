@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public final class EnumButton<V extends Enum<V>> implements Button {
-    public static <V extends Enum<V>> @NotNull Button of(@NotNull EnumButton.StateAccessor<V> stateAccessor,
+    public static <V extends Enum<V>> @NotNull Button of(@NotNull EnumButton.ValueAccessor<V> valueAccessor,
             @NotNull EnumButton.StackProvider<V> stackProvider) {
-        return new EnumButton<>(stateAccessor, stackProvider);
+        return new EnumButton<>(valueAccessor, stackProvider);
     }
 
     @FunctionalInterface
@@ -29,23 +29,24 @@ public final class EnumButton<V extends Enum<V>> implements Button {
         void setValue(@NotNull V value, @NotNull MenuState menuState);
     }
 
-    public interface StateAccessor<V extends Enum<V>> extends ValueGetter<V>, ValueSetter<V> {
+    public interface ValueAccessor<V extends Enum<V>> extends ValueGetter<V>, ValueSetter<V> {
         void cycleValue(@NotNull MenuState menuState);
 
-        static <V extends Enum<V>> @NotNull StateAccessor<V> of(Class<V> type, ValueGetter<V> supplier, ValueSetter<V> consumer) {
+        static <V extends Enum<V>> @NotNull ValueAccessor<V> of(@NotNull Class<V> type,
+                @NotNull ValueGetter<V> getter, @NotNull ValueSetter<V> setter) {
             if (type.getEnumConstants() == null)
                 throw new IllegalArgumentException(type + " is not an enum!");
-            return new StateAccessor<V>() {
+            return new ValueAccessor<V>() {
                 private final V[] values = type.getEnumConstants();
 
                 @Override
                 public @NotNull V getValue() {
-                    return supplier.getValue();
+                    return getter.getValue();
                 }
 
                 @Override
                 public void setValue(@NotNull V value, @NotNull MenuState menuState) {
-                    consumer.setValue(value, menuState);
+                    setter.setValue(value, menuState);
                 }
 
                 @Override
@@ -85,21 +86,21 @@ public final class EnumButton<V extends Enum<V>> implements Button {
         }
     }
 
-    private final StateAccessor<V> stateAccessor;
+    private final ValueAccessor<V> valueAccessor;
     private final StackProvider<V> stackProvider;
 
-    private EnumButton(StateAccessor<V> stateAccessor, StackProvider<V> stackProvider) {
-        this.stateAccessor = stateAccessor;
+    private EnumButton(ValueAccessor<V> valueAccessor, StackProvider<V> stackProvider) {
+        this.valueAccessor = valueAccessor;
         this.stackProvider = stackProvider;
     }
 
     @Override
     public @NotNull ItemStack getStack() {
-        return stackProvider.getStack(stateAccessor.getValue());
+        return stackProvider.getStack(valueAccessor.getValue());
     }
 
     @Override
     public void onClick(@NotNull MenuState menuState) {
-        stateAccessor.cycleValue(menuState);
+        valueAccessor.cycleValue(menuState);
     }
 }

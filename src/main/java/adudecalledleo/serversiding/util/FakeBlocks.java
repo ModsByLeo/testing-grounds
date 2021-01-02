@@ -150,28 +150,21 @@ public final class FakeBlocks {
         BlockEntity blockEntity = player.getServerWorld().getBlockEntity(pos);
         if (blockEntity == null)
             return null;
-
-        if (blockEntity instanceof BlockEntityClientSerializable) {
-            CompoundTag tag = new CompoundTag();
-            tag = ((BlockEntityClientSerializable) blockEntity).toClientTag(tag);
-            return new BlockEntityUpdateS2CPacket(pos, 127, tag);
-        } else {
-            // force command blocks to create an update packet (custom "isDirty" logic here, thanks mojank)
-            boolean neededUpdatePacket = false;
-            CommandBlockBlockEntity commandBlockBlockEntity = null;
-            if (blockEntity instanceof CommandBlockBlockEntity)
-                commandBlockBlockEntity = (CommandBlockBlockEntity) blockEntity;
-            if (commandBlockBlockEntity != null) {
-                neededUpdatePacket = commandBlockBlockEntity.needsUpdatePacket();
-                commandBlockBlockEntity.setNeedsUpdatePacket(true);
-            }
-            // defer to vanilla's toUpdatePacket() method
-            Packet<?> packet = blockEntity.toUpdatePacket();
-            // restore command block state
-            if (commandBlockBlockEntity != null)
-                commandBlockBlockEntity.setNeedsUpdatePacket(neededUpdatePacket);
-            return packet;
+        // force command blocks to create an update packet (custom "isDirty" logic here, thanks mojank)
+        boolean neededUpdatePacket = false;
+        CommandBlockBlockEntity commandBlockBlockEntity = null;
+        if (blockEntity instanceof CommandBlockBlockEntity)
+            commandBlockBlockEntity = (CommandBlockBlockEntity) blockEntity;
+        if (commandBlockBlockEntity != null) {
+            neededUpdatePacket = commandBlockBlockEntity.needsUpdatePacket();
+            commandBlockBlockEntity.setNeedsUpdatePacket(true);
         }
+        // call vanilla's toUpdatePacket() method (BlockEntityClientSerializable should also return an update packet here)
+        Packet<?> packet = blockEntity.toUpdatePacket();
+        // restore command block state
+        if (commandBlockBlockEntity != null)
+            commandBlockBlockEntity.setNeedsUpdatePacket(neededUpdatePacket);
+        return packet;
     }
 
     /**

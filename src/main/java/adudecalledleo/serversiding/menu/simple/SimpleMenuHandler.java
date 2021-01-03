@@ -20,36 +20,13 @@ public class SimpleMenuHandler implements MenuHandler {
     private final IntArraySet slotsToRepaint;
     private final MenuState menuState;
 
-    private static final class SlotObject {
-        enum Type {
-            BUTTON,
-            LABEL
-        }
-
-        private final Type type;
-        private final Button button;
-        private final Label label;
-
-        public SlotObject(Button button) {
-            type = Type.BUTTON;
-            this.button = button;
-            label = null;
-        }
-
-        public SlotObject(Label label) {
-            type = Type.LABEL;
-            button = null;
-            this.label = label;
-        }
-    }
-
-    private final Int2ReferenceOpenHashMap<SlotObject> objects;
+    private final Int2ReferenceOpenHashMap<Button> buttons;
 
     public SimpleMenuHandler(int rows, @NotNull BackgroundPainter backgroundPainter) {
         this.rows = rows;
         this.backgroundPainter = backgroundPainter;
 
-        objects = new Int2ReferenceOpenHashMap<>();
+        buttons = new Int2ReferenceOpenHashMap<>();
         IntArraySet allSlots = new IntArraySet();
         for (int i = 0; i < 9 * rows; i++)
             allSlots.add(i);
@@ -66,11 +43,7 @@ public class SimpleMenuHandler implements MenuHandler {
     }
 
     public void addButton(int slot, @NotNull Button button) {
-        objects.put(slot, new SlotObject(button));
-    }
-
-    public void addLabel(int slot, @NotNull Label label) {
-        objects.put(slot, new SlotObject(label));
+        buttons.put(slot, button);
     }
 
     @Override
@@ -82,19 +55,9 @@ public class SimpleMenuHandler implements MenuHandler {
         for (int slotId = 0; slotId < inventory.size(); slotId++) {
             if (!slotsToRepaint.contains(slotId))
                 continue;
-            if (objects.containsKey(slotId)) {
-                SlotObject object = objects.get(slotId);
-                switch (object.type) {
-                case BUTTON:
-                    inventory.setStack(slotId, object.button.getStack());
-                    break;
-                case LABEL:
-                    inventory.setStack(slotId, object.label.getStack());
-                    break;
-                default:
-                    break;
-                }
-            } else
+            if (buttons.containsKey(slotId))
+                inventory.setStack(slotId, buttons.get(slotId).getStack());
+            else
                 inventory.setStack(slotId, backgroundPainter.paint(slotId));
         }
         slotsToRepaint.clear();
@@ -109,16 +72,8 @@ public class SimpleMenuHandler implements MenuHandler {
     @Override
     public boolean onSlotClick(int slotId, int clickData, SlotActionType actionType, ServerPlayerEntity player, Inventory inventory) {
         menuState.closeAndDoThis = null;
-        if (objects.containsKey(slotId)) {
-            SlotObject object = objects.get(slotId);
-            switch (object.type) {
-            case BUTTON:
-                object.button.onClick(menuState);
-                break;
-            default:
-                break;
-            }
-        }
+        if (buttons.containsKey(slotId))
+            buttons.get(slotId).onClick(menuState);
         if (menuState.closeAndDoThis != null) {
             player.closeHandledScreen();
             final Consumer<ServerPlayerEntity> consumer = menuState.closeAndDoThis;

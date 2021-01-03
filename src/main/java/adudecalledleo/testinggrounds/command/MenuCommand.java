@@ -13,7 +13,6 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
@@ -92,9 +91,10 @@ class MenuCommand {
                     EnumButton.StackProvider.simple(TestEnum::getIcon, TestEnum::getName, new LiteralText("Enum Test"),
                             new LiteralText("Test for enum buttons."),
                             new LiteralText("Does nothing."))));
-            addLabel(slot(3, 0), Label.of(Items.OAK_SIGN,
+            addButton(slot(3, 0), Label.of(Items.OAK_SIGN,
                     new LiteralText("Radio Button Test"),
-                    new LiteralText("Test for radio choices!")));
+                    new LiteralText("Test for radio choices!"),
+                    new LiteralText("(does nothing)")));
             RadioButtonGroup.of(
                     RadioButtonGroup.ChoiceAccessor.of(() -> testChoice, (value, menuState) -> testChoice = value),
                     RadioButtonGroup.ChoiceInfoProvider.of(value -> new LiteralText("Radio Choice " + (value + 1)),

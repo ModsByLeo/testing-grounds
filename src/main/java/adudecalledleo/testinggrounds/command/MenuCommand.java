@@ -112,7 +112,7 @@ class MenuCommand {
                 if (stack.isEmpty())
                     player.sendMessage(new LiteralText("slot " + slotId + " is empty"), false);
                 else
-                    player.sendMessage(new LiteralText("slot " + slotId + "has item: ")
+                    player.sendMessage(new LiteralText("slot " + slotId + " has item: ")
                                     .append(inventory.getStack(slotId).toHoverableText()),
                         false);
             });

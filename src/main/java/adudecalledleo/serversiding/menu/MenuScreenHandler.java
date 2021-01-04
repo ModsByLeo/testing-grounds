@@ -207,7 +207,7 @@ class MenuScreenHandler extends ScreenHandler {
             sendInventoryPacket((ServerPlayerEntity) player, this);
             sendCursorStackUpdatePacket((ServerPlayerEntity) player);
         } else if (player instanceof ServerPlayerEntity)
-            menuHandler.postSlotClick(slotId, clickData, actionType, (ServerPlayerEntity) player, inventory);
+            menuHandler.postSlotClick((ServerPlayerEntity) player, inventory);
         return ret;
     }
 

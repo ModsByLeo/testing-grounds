@@ -15,7 +15,7 @@ public interface MenuHandler {
     boolean onSlotClick(int slotId, int clickData, SlotActionType actionType, ServerPlayerEntity player, Inventory inventory);
     void onClose(ServerPlayerEntity player, Inventory inventory);
 
-    default void postSlotClick(int slotId, int clickData, SlotActionType actionType, ServerPlayerEntity player, Inventory inventory) { }
+    default void postSlotClick(ServerPlayerEntity player, Inventory inventory) { }
     default boolean canInsert(int slotId, ItemStack stack, ServerPlayerEntity player, Inventory inventory) {
         return false;
     }

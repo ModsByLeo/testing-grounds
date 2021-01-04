@@ -108,13 +108,13 @@ public class SimpleMenuHandler implements MenuHandler {
     }
 
     @Override
-    public void postSlotClick(int slotId, int clickData, SlotActionType actionType, ServerPlayerEntity player, Inventory inventory) {
+    public void postSlotClick(ServerPlayerEntity player, Inventory inventory) {
         menuState.closeAndDoThis = null;
         for (Int2ReferenceMap.Entry<ItemStack> entry : trackedStacks.int2ReferenceEntrySet()) {
             ItemStack stack = inventory.getStack(entry.getIntKey());
             if (!ItemStack.areEqual(entry.getValue(), stack)) {
                 trackedStacks.put(entry.getIntKey(), stack.copy());
-                slotListeners.get(entry.getIntKey()).onChanged(slotId, player, inventory, menuState);
+                slotListeners.get(entry.getIntKey()).onChanged(entry.getIntKey(), player, inventory, menuState);
             }
         }
     }

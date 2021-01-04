@@ -15,8 +15,18 @@ public interface MenuHandler {
     boolean onSlotClick(int slotId, int clickData, SlotActionType actionType, ServerPlayerEntity player, Inventory inventory);
     void onClose(ServerPlayerEntity player, Inventory inventory);
 
+    default void postSlotClick(int slotId, int clickData, SlotActionType actionType, ServerPlayerEntity player, Inventory inventory) { }
     default boolean canInsert(int slotId, ItemStack stack, ServerPlayerEntity player, Inventory inventory) {
         return false;
+    }
+    default boolean canExtract(int slotId, ServerPlayerEntity player, Inventory inventory) {
+        return false;
+    }
+    default int getMaxItemCount(int slotId, ServerPlayerEntity player, Inventory inventory) {
+        return 64;
+    }
+    default int getMaxItemCount(int slotId, ItemStack stack, ServerPlayerEntity player, Inventory inventory) {
+        return getMaxItemCount(slotId, player, inventory);
     }
 
     static int slot(int col, int row) {

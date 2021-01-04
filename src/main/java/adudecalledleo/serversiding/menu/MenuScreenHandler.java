@@ -38,6 +38,37 @@ class MenuScreenHandler extends ScreenHandler {
         }
     }
 
+    private final class MenuSlot extends Slot {
+        private final int slotId;
+        private final ServerPlayerEntity player;
+
+        public MenuSlot(int index, int x, int y, ServerPlayerEntity player) {
+            super(MenuScreenHandler.this.inventory, index, x, y);
+            slotId = index;
+            this.player = player;
+        }
+
+        @Override
+        public boolean canInsert(ItemStack stack) {
+            return menuHandler.canInsert(slotId, stack, player, inventory);
+        }
+
+        @Override
+        public boolean canTakeItems(PlayerEntity playerEntity) {
+            return menuHandler.canExtract(slotId, player, inventory);
+        }
+
+        @Override
+        public int getMaxItemCount() {
+            return menuHandler.getMaxItemCount(slotId, player, inventory);
+        }
+
+        @Override
+        public int getMaxItemCount(ItemStack stack) {
+            return menuHandler.getMaxItemCount(slotId, stack, player, inventory);
+        }
+    }
+
     public MenuScreenHandler(int syncId, MenuHandler menuHandler, PlayerEntity player) {
         super(rowCountToType(menuHandler.getRowCount()), syncId);
         this.menuHandler = menuHandler;
@@ -47,22 +78,29 @@ class MenuScreenHandler extends ScreenHandler {
         if (player instanceof ServerPlayerEntity)
             menuHandler.onOpen((ServerPlayerEntity) player, inventory);
 
-        int i = (rows - 4) * 18;
+        int invHeight = (rows - 4) * 18;
 
-        int n;
-        int m;
-        for(n = 0; n < rows; n++) {
-            for(m = 0; m < 9; m++)
-                addSlot(new Slot(inventory, m + n * 9, 8 + m * 18, 18 + n * 18));
+        int row;
+        int col;
+        if (player instanceof ServerPlayerEntity) {
+            for (row = 0; row < rows; row++) {
+                for (col = 0; col < 9; col++)
+                    addSlot(new MenuSlot(col + row * 9, 8 + col * 18, 18 + row * 18, (ServerPlayerEntity) player));
+            }
+        } else {
+            for (row = 0; row < rows; row++) {
+                for (col = 0; col < 9; col++)
+                    addSlot(new Slot(inventory, col + row * 9, 8 + col * 18, 18 + row * 18));
+            }
         }
 
-        for(n = 0; n < 3; n++) {
-            for(m = 0; m < 9; m++)
-                addSlot(new Slot(player.inventory, m + n * 9 + 9, 8 + m * 18, 103 + n * 18 + i));
+        for (row = 0; row < 3; row++) {
+            for (col = 0; col < 9; col++)
+                addSlot(new Slot(player.inventory, col + row * 9 + 9, 8 + col * 18, 103 + row * 18 + invHeight));
         }
 
-        for(n = 0; n < 9; n++)
-            this.addSlot(new Slot(player.inventory, n, 8 + n * 18, 161 + i));
+        for (row = 0; row < 9; row++)
+            this.addSlot(new Slot(player.inventory, row, 8 + row * 18, 161 + invHeight));
     }
 
     @Override
@@ -78,93 +116,6 @@ class MenuScreenHandler extends ScreenHandler {
             super.sendContentUpdates();
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    private boolean insertItem(PlayerEntity player, ItemStack stack, int startIndex, int endIndex, boolean fromLast) {
-        ServerPlayerEntity serverPlayer = null;
-        if (player instanceof ServerPlayerEntity)
-            serverPlayer = (ServerPlayerEntity) player;
-
-        boolean bl = false;
-        int i = startIndex;
-        if (fromLast)
-            i = endIndex - 1;
-
-        Slot slot2;
-        ItemStack itemStack;
-        if (stack.isStackable()) {
-            while (!stack.isEmpty()) {
-                if (fromLast) {
-                    if (i < startIndex)
-                        break;
-                } else if (i >= endIndex)
-                    break;
-
-                slot2 = slots.get(i);
-                boolean canInsert = true;
-                if (serverPlayer != null && i < 9 * rows)
-                    canInsert = menuHandler.canInsert(i, stack, serverPlayer, inventory);
-                itemStack = slot2.getStack();
-                if (canInsert && !itemStack.isEmpty() && canStacksCombine(stack, itemStack)) {
-                    int j = itemStack.getCount() + stack.getCount();
-                    if (j <= stack.getMaxCount()) {
-                        stack.setCount(0);
-                        itemStack.setCount(j);
-                        slot2.markDirty();
-                        bl = true;
-                    } else if (itemStack.getCount() < stack.getMaxCount()) {
-                        stack.decrement(stack.getMaxCount() - itemStack.getCount());
-                        itemStack.setCount(stack.getMaxCount());
-                        slot2.markDirty();
-                        bl = true;
-                    }
-                }
-
-                if (fromLast)
-                    --i;
-                else
-                    ++i;
-            }
-        }
-
-        if (!stack.isEmpty()) {
-            if (fromLast)
-                i = endIndex - 1;
-            else
-                i = startIndex;
-
-            while (true) {
-                if (fromLast) {
-                    if (i < startIndex)
-                        break;
-                } else if (i >= endIndex)
-                    break;
-
-                slot2 = slots.get(i);
-                boolean canInsert = true;
-                if (serverPlayer != null && i < 9 * rows)
-                    canInsert = menuHandler.canInsert(i, stack, serverPlayer, inventory);
-                itemStack = slot2.getStack();
-                if (canInsert && itemStack.isEmpty()) {
-                    if (stack.getCount() > slot2.getMaxItemCount())
-                        slot2.setStack(stack.split(slot2.getMaxItemCount()));
-                    else
-                        slot2.setStack(stack.split(stack.getCount()));
-
-                    slot2.markDirty();
-                    bl = true;
-                    break;
-                }
-
-                if (fromLast)
-                    --i;
-                else
-                    ++i;
-            }
-        }
-
-        return bl;
-    }
-
     @Override
     public ItemStack transferSlot(PlayerEntity player, int index) {
         ItemStack itemStack = ItemStack.EMPTY;
@@ -173,9 +124,9 @@ class MenuScreenHandler extends ScreenHandler {
             ItemStack itemStack2 = slot.getStack();
             itemStack = itemStack2.copy();
             if (index < 9 * rows) {
-                if (!insertItem(player, itemStack2, 9 * rows, slots.size(), true))
+                if (!insertItem(itemStack2, 9 * rows, slots.size(), true))
                     return ItemStack.EMPTY;
-            } else if (!insertItem(player, itemStack2, 0, 9 * rows, false))
+            } else if (!insertItem(itemStack2, 0, 9 * rows, false))
                 return ItemStack.EMPTY;
 
             if (itemStack2.isEmpty())
@@ -255,7 +206,8 @@ class MenuScreenHandler extends ScreenHandler {
             sendInventoryPacket((ServerPlayerEntity) player, player.playerScreenHandler);
             sendInventoryPacket((ServerPlayerEntity) player, this);
             sendCursorStackUpdatePacket((ServerPlayerEntity) player);
-        }
+        } else if (player instanceof ServerPlayerEntity)
+            menuHandler.postSlotClick(slotId, clickData, actionType, (ServerPlayerEntity) player, inventory);
         return ret;
     }
 

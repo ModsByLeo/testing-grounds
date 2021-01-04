@@ -7,8 +7,11 @@ import adudecalledleo.serversiding.menu.simple.SimpleMenuHandler;
 import adudecalledleo.serversiding.menu.simple.button.*;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
@@ -104,6 +107,23 @@ class MenuCommand {
                     })
             ).addChoiceAt(slot(3, 2)).addChoiceAt(slot(3, 4)).addChoiceAt(slot(3, 6))
                     .addTo(this);
+            addSlotListener(slot(4, 8), (slotId, player, inventory, menuState) -> {
+                ItemStack stack = inventory.getStack(slotId);
+                if (stack.isEmpty())
+                    player.sendMessage(new LiteralText("slot " + slotId + " is empty"), false);
+                else
+                    player.sendMessage(new LiteralText("slot " + slotId + "has item: ")
+                                    .append(inventory.getStack(slotId).toHoverableText()),
+                        false);
+            });
+        }
+
+        @Override
+        public boolean onSlotClick(int slotId, int clickData, SlotActionType actionType, ServerPlayerEntity player,
+                Inventory inventory) {
+            player.sendMessage(new LiteralText("action: " + actionType), false);
+            player.sendMessage(new LiteralText("clicked on slot " + slotId + ", with data " + clickData), false);
+            return super.onSlotClick(slotId, clickData, actionType, player, inventory);
         }
     }
 

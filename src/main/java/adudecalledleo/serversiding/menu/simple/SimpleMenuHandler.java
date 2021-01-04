@@ -23,6 +23,7 @@ public class SimpleMenuHandler implements MenuHandler {
 
     private final Int2ReferenceOpenHashMap<Button> buttons;
     private final Int2ReferenceOpenHashMap<SlotListener> slotListeners;
+    private final Int2ReferenceOpenHashMap<ItemStack> trackedStacks;
 
     public SimpleMenuHandler(int rows, @NotNull BackgroundPainter backgroundPainter) {
         this.rows = rows;
@@ -30,6 +31,8 @@ public class SimpleMenuHandler implements MenuHandler {
 
         buttons = new Int2ReferenceOpenHashMap<>();
         slotListeners = new Int2ReferenceOpenHashMap<>();
+        trackedStacks = new Int2ReferenceOpenHashMap<>();
+        trackedStacks.defaultReturnValue(ItemStack.EMPTY);
 
         IntArraySet allSlots = new IntArraySet();
         for (int i = 0; i < 9 * rows; i++)
@@ -75,6 +78,8 @@ public class SimpleMenuHandler implements MenuHandler {
 
     @Override
     public void onOpen(ServerPlayerEntity player, Inventory inventory) {
+        for (Int2ReferenceMap.Entry<SlotListener> entry : slotListeners.int2ReferenceEntrySet())
+            trackedStacks.put(entry.getIntKey(), inventory.getStack(entry.getIntKey()).copy());
         menuState.markAllSlotsForRepaint();
         repaint(inventory);
     }
@@ -105,9 +110,12 @@ public class SimpleMenuHandler implements MenuHandler {
     @Override
     public void postSlotClick(int slotId, int clickData, SlotActionType actionType, ServerPlayerEntity player, Inventory inventory) {
         menuState.closeAndDoThis = null;
-        if (slotListeners.containsKey(slotId)) {
-            slotListeners.get(slotId).onChanged(slotId, player, inventory, menuState);
-            applyMenuState(slotId, player, inventory);
+        for (Int2ReferenceMap.Entry<ItemStack> entry : trackedStacks.int2ReferenceEntrySet()) {
+            ItemStack stack = inventory.getStack(entry.getIntKey());
+            if (!ItemStack.areEqual(entry.getValue(), stack)) {
+                trackedStacks.put(entry.getIntKey(), stack.copy());
+                slotListeners.get(entry.getIntKey()).onChanged(slotId, player, inventory, menuState);
+            }
         }
     }
 

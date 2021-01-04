@@ -18,9 +18,6 @@ public interface MenuHandler {
     default boolean canInsert(int slotId, ItemStack stack, ServerPlayerEntity player, Inventory inventory) {
         return false;
     }
-    default boolean canTake(int slotId, ItemStack stack, ServerPlayerEntity player, Inventory inventory) {
-        return false;
-    }
 
     static int slot(int col, int row) {
         return 9 * col + row;

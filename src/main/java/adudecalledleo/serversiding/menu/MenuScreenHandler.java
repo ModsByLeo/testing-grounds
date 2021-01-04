@@ -78,10 +78,113 @@ class MenuScreenHandler extends ScreenHandler {
             super.sendContentUpdates();
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private boolean insertItem(PlayerEntity player, ItemStack stack, int startIndex, int endIndex, boolean fromLast) {
+        ServerPlayerEntity serverPlayer = null;
+        if (player instanceof ServerPlayerEntity)
+            serverPlayer = (ServerPlayerEntity) player;
+
+        boolean bl = false;
+        int i = startIndex;
+        if (fromLast)
+            i = endIndex - 1;
+
+        Slot slot2;
+        ItemStack itemStack;
+        if (stack.isStackable()) {
+            while (!stack.isEmpty()) {
+                if (fromLast) {
+                    if (i < startIndex)
+                        break;
+                } else if (i >= endIndex)
+                    break;
+
+                slot2 = slots.get(i);
+                boolean canInsert = true;
+                if (serverPlayer != null && i < 9 * rows)
+                    canInsert = menuHandler.canInsert(i, stack, serverPlayer, inventory);
+                itemStack = slot2.getStack();
+                if (canInsert && !itemStack.isEmpty() && canStacksCombine(stack, itemStack)) {
+                    int j = itemStack.getCount() + stack.getCount();
+                    if (j <= stack.getMaxCount()) {
+                        stack.setCount(0);
+                        itemStack.setCount(j);
+                        slot2.markDirty();
+                        bl = true;
+                    } else if (itemStack.getCount() < stack.getMaxCount()) {
+                        stack.decrement(stack.getMaxCount() - itemStack.getCount());
+                        itemStack.setCount(stack.getMaxCount());
+                        slot2.markDirty();
+                        bl = true;
+                    }
+                }
+
+                if (fromLast)
+                    --i;
+                else
+                    ++i;
+            }
+        }
+
+        if (!stack.isEmpty()) {
+            if (fromLast)
+                i = endIndex - 1;
+            else
+                i = startIndex;
+
+            while (true) {
+                if (fromLast) {
+                    if (i < startIndex)
+                        break;
+                } else if (i >= endIndex)
+                    break;
+
+                slot2 = slots.get(i);
+                boolean canInsert = true;
+                if (serverPlayer != null && i < 9 * rows)
+                    canInsert = menuHandler.canInsert(i, stack, serverPlayer, inventory);
+                itemStack = slot2.getStack();
+                if (canInsert && itemStack.isEmpty()) {
+                    if (stack.getCount() > slot2.getMaxItemCount())
+                        slot2.setStack(stack.split(slot2.getMaxItemCount()));
+                    else
+                        slot2.setStack(stack.split(stack.getCount()));
+
+                    slot2.markDirty();
+                    bl = true;
+                    break;
+                }
+
+                if (fromLast)
+                    --i;
+                else
+                    ++i;
+            }
+        }
+
+        return bl;
+    }
+
     @Override
     public ItemStack transferSlot(PlayerEntity player, int index) {
-        // TODO actually implement this
-        return ItemStack.EMPTY;
+        ItemStack itemStack = ItemStack.EMPTY;
+        Slot slot = slots.get(index);
+        if (slot != null && slot.hasStack()) {
+            ItemStack itemStack2 = slot.getStack();
+            itemStack = itemStack2.copy();
+            if (index < 9 * rows) {
+                if (!insertItem(player, itemStack2, 9 * rows, slots.size(), true))
+                    return ItemStack.EMPTY;
+            } else if (!insertItem(player, itemStack2, 0, 9 * rows, false))
+                return ItemStack.EMPTY;
+
+            if (itemStack2.isEmpty())
+                slot.setStack(ItemStack.EMPTY);
+            else
+                slot.markDirty();
+        }
+
+        return itemStack;
     }
 
     private void sendInventoryPacket(ServerPlayerEntity player, ScreenHandler screenHandler) {
@@ -116,6 +219,9 @@ class MenuScreenHandler extends ScreenHandler {
                 sendCursorStackUpdatePacket((ServerPlayerEntity) player);
                 return ItemStack.EMPTY;
             }
+            if (actionType == SlotActionType.QUICK_CRAFT && ScreenHandler.unpackQuickCraftStage(clickData) < 2)
+                // simple cancel (only do advanced cancel for QUICK_CRAFT after it's "finished")
+                return ItemStack.EMPTY;
             if (actionType == SlotActionType.THROW || actionType == SlotActionType.PICKUP)
                 // simple cancel (required for THROW, a nice optimization for PICKUP)
                 return ItemStack.EMPTY;
@@ -145,8 +251,7 @@ class MenuScreenHandler extends ScreenHandler {
                 trackedStacks.set(i, stack);
             }
             player.inventory.setCursorStack(savedCursorStack);
-            // forcibly resync everything
-            // TODO this is horribly inefficient.
+            // resync everything
             sendInventoryPacket((ServerPlayerEntity) player, player.playerScreenHandler);
             sendInventoryPacket((ServerPlayerEntity) player, this);
             sendCursorStackUpdatePacket((ServerPlayerEntity) player);

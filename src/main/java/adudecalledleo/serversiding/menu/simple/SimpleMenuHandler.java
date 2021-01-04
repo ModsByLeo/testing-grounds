@@ -71,16 +71,18 @@ public class SimpleMenuHandler implements MenuHandler {
 
     @Override
     public boolean onSlotClick(int slotId, int clickData, SlotActionType actionType, ServerPlayerEntity player, Inventory inventory) {
-        menuState.closeAndDoThis = null;
-        if (buttons.containsKey(slotId))
-            buttons.get(slotId).onClick(menuState);
-        if (menuState.closeAndDoThis != null) {
-            player.closeHandledScreen();
-            final Consumer<ServerPlayerEntity> consumer = menuState.closeAndDoThis;
-            player.getServerWorld().getServer().execute(() -> consumer.accept(player));
-        } else {
-            slotsToRepaint.add(slotId);
-            repaint(player, inventory);
+        if (actionType == SlotActionType.PICKUP) {
+            menuState.closeAndDoThis = null;
+            if (buttons.containsKey(slotId))
+                buttons.get(slotId).onClick(menuState);
+            if (menuState.closeAndDoThis != null) {
+                player.closeHandledScreen();
+                final Consumer<ServerPlayerEntity> consumer = menuState.closeAndDoThis;
+                player.getServerWorld().getServer().execute(() -> consumer.accept(player));
+            } else {
+                slotsToRepaint.add(slotId);
+                repaint(player, inventory);
+            }
         }
         return true;
     }

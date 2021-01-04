@@ -4,6 +4,7 @@
   "package": "adudecalledleo.serversiding.impl.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "ScreenHandlerAccessor",
     "ServerPlayNetworkHandlerMixin"
   ],
   "injectors": {

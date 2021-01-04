@@ -2,14 +2,12 @@ package adudecalledleo.serversiding.menu.simple.button;
 
 import adudecalledleo.lionutils.item.ItemStackBuilder;
 import adudecalledleo.serversiding.menu.simple.MenuState;
+import adudecalledleo.serversiding.util.TextUtils;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class Label implements Button {
     @FunctionalInterface
@@ -22,10 +20,7 @@ public final class Label implements Button {
                     .setCustomName(title.shallowCopy()
                             .styled(style -> style.withColor(Formatting.BLUE).withBold(true).withItalic(false))
                     )
-                    .addLore(Stream.of(description)
-                            .map(Text::shallowCopy)
-                            .map(line -> line.styled(style -> style.withColor(Formatting.GRAY).withItalic(true)))
-                            .collect(Collectors.toList()))
+                    .addLore(TextUtils.toLore(description))
                     .build();
         }
     }

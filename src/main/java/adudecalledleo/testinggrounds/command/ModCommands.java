@@ -15,5 +15,6 @@ public final class ModCommands {
         dispatcher.register(literal("mailbox").executes(MailboxCommand::execute));
         dispatcher.register(literal("signprompt").executes(SignPromptCommand::execute));
         dispatcher.register(literal("menu").executes(MenuCommand::execute));
+        MarkdownCommand.register(dispatcher);
     }
 }

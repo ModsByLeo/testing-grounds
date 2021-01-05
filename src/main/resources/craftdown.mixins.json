@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "adudecalledleo.craftdown.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "StyleAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

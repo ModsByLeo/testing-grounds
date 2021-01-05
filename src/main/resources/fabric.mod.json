@@ -17,12 +17,14 @@
       "adudecalledleo.testinggrounds.client.TestingGroundsClient"
     ],
     "main": [
+      "adudecalledleo.craftdown.Craftdown",
       "adudecalledleo.serversiding.ServerSiding",
       "adudecalledleo.mcmail.MCMail",
       "adudecalledleo.testinggrounds.TestingGrounds"
     ]
   },
   "mixins": [
+    "craftdown.mixins.json",
     "serversiding.mixins.json",
     "serversiding.impl.mixins.json",
     "testinggrounds.mixins.json",

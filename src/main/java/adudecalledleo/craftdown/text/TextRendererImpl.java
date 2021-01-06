@@ -53,6 +53,8 @@ final class TextRendererImpl implements TextRenderer {
                 case STRIKETHROUGH:
                     style = StyleUtils.withStrikethrough(style, true);
                     break;
+                default:
+                    throw new RuntimeException("Unsupported style type " + type);
                 }
                 styleStack.push(style);
                 nodeVisitor.visitChildren(node);

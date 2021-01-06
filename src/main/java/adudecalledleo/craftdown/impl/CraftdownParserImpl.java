@@ -1,16 +1,22 @@
-package adudecalledleo.craftdown.parser;
+package adudecalledleo.craftdown.impl;
 
 import adudecalledleo.craftdown.node.*;
+import adudecalledleo.craftdown.CraftdownParser;
 import adudecalledleo.craftdown.util.NodeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static adudecalledleo.craftdown.Craftdown.LOGGER;
 
-public final class MarkdownParser {
-    private MarkdownParser() { }
+public final class CraftdownParserImpl implements CraftdownParser {
+    private final boolean parseLinks;
 
-    public static @NotNull Node parse(@NotNull String src) {
+    public CraftdownParserImpl(boolean parseLinks) {
+        this.parseLinks = parseLinks;
+    }
+
+    @Override
+    public @NotNull Node parse(@NotNull String src) {
         LOGGER.info("parse: STARTING!!!! src={}", src);
         Document root = new Document();
         parseInternal(root, new Scanner(src));
@@ -19,7 +25,7 @@ public final class MarkdownParser {
         return root;
     }
 
-    private static void parseInternal(Node root, Scanner scanner) {
+    private void parseInternal(Node root, Scanner scanner) {
         LOGGER.info("parseInternal: root={}, scanner.chars=\"{}\"", root, new String(scanner.chars));
         final StringBuilder sb = new StringBuilder();
         char c;
@@ -50,7 +56,7 @@ public final class MarkdownParser {
         LOGGER.info("parseInternal: root={} END", root);
     }
 
-    private static boolean handleChar(Node root, Scanner scanner, char c) {
+    private boolean handleChar(Node root, Scanner scanner, char c) {
         char cp, cn;
         switch (c) {
         case '*':

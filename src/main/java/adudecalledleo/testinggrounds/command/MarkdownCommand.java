@@ -1,8 +1,8 @@
 package adudecalledleo.testinggrounds.command;
 
-import adudecalledleo.craftdown.CraftdownParser;
 import adudecalledleo.craftdown.node.Node;
 import adudecalledleo.craftdown.node.NodeVisitor;
+import adudecalledleo.craftdown.CraftdownParser;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
@@ -29,8 +29,10 @@ class MarkdownCommand {
         );
     }
 
+    private static final CraftdownParser PARSER = CraftdownParser.builder().build();
+
     private static void execute(ServerPlayerEntity player, String src) {
-        Node root = CraftdownParser.fromMarkdownString(src.replaceAll("\\\\n", "\n"));
+        Node root = PARSER.parse(src.replaceAll("\\\\n", "\n"));
         NodeDebugger nd = new NodeDebugger();
         LOGGER.info("NodeDebugger START src={}", src);
         root.visit(nd.nodeVisitor);

@@ -1,13 +1,30 @@
 package adudecalledleo.craftdown;
 
+import adudecalledleo.craftdown.impl.CraftdownParserImpl;
 import adudecalledleo.craftdown.node.Node;
-import adudecalledleo.craftdown.parser.MarkdownParser;
 import org.jetbrains.annotations.NotNull;
 
-public final class CraftdownParser {
-    private CraftdownParser() { }
+public interface CraftdownParser {
+    @NotNull Node parse(@NotNull String str);
 
-    public static @NotNull Node fromMarkdownString(@NotNull String src) {
-        return MarkdownParser.parse(src);
+    static @NotNull Builder builder() {
+        return new Builder();
+    }
+
+    final class Builder {
+        private boolean parseLinks;
+
+        private Builder() {
+            parseLinks = false;
+        }
+
+        public @NotNull Builder parseLinks(boolean parseLinks) {
+            this.parseLinks = parseLinks;
+            return this;
+        }
+
+        public @NotNull CraftdownParser build() {
+            return new CraftdownParserImpl(parseLinks);
+        }
     }
 }

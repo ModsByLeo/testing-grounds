@@ -1,6 +1,5 @@
 package adudecalledleo.craftdown.node;
 
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,9 +16,8 @@ public abstract class Node {
         parent = null;
         children = new ArrayList<>();
     }
-    
-    @ApiStatus.Internal
-    public void setParent(@Nullable Node parent) {
+
+    protected void setParent(@Nullable Node parent) {
         this.parent = parent;
     }
 

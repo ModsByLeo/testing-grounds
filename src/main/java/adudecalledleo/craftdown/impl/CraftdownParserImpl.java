@@ -3,14 +3,15 @@ package adudecalledleo.craftdown.impl;
 import adudecalledleo.craftdown.node.*;
 import adudecalledleo.craftdown.CraftdownParser;
 import adudecalledleo.craftdown.util.NodeUtil;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 
 import static adudecalledleo.craftdown.Craftdown.LOGGER;
 
+@ApiStatus.Internal
 public final class CraftdownParserImpl implements CraftdownParser {
     private final boolean parseLinks;
     private final URL linkContext;
@@ -31,27 +32,46 @@ public final class CraftdownParserImpl implements CraftdownParser {
     }
 
     private void parseInternal(Node root, Scanner scanner) {
-        LOGGER.info("parseInternal: root={}, scanner.chars=\"{}\"", root, new String(scanner.chars));
+        final int MAX_LOOP_COUNT = 50;
+        int loopCount = 0;
+        LOGGER.info("parseInternal: root={}, scanner={}", root, scanner);
         final StringBuilder sb = new StringBuilder();
         char c;
         while ((c = scanner.peek()) != Scanner.END) {
-            int insertPoint = 0;
+            LOGGER.info("parseInternal: loopCount={}", loopCount);
+            loopCount++;
+            if (loopCount > MAX_LOOP_COUNT)
+                throw new RuntimeException("Stopping probably-infinite loop");
+            Node curLast = null;
             if (root.getChildCount() > 0)
-                insertPoint = root.getChildCount() - 1;
+                curLast = root.getChildAt(root.getChildCount() - 1);
+            LOGGER.info("parseInternal: got char '{}'!", c);
             if (handleChar(root, scanner, c)) {
+                LOGGER.info("parseInternal: special character!");
+                if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '\\') {
+                    LOGGER.info("parseInternal: deleting backslash");
+                    sb.deleteCharAt(sb.length() - 1);
+                }
+                LOGGER.info("parseInternal: sb contents=\"{}\"", sb.toString());
                 Node textNode = new TextNode(sb.toString());
                 sb.setLength(0);
-                root.insertChild(insertPoint, textNode);
+                if (curLast == null)
+                    root.insertChild(0, textNode);
+                else
+                    root.insertChild(root.getIndexOfChild(curLast) + 1, textNode);
                 continue;
             }
             scanner.next();
             if (c == '\n') {
+                LOGGER.info("parseInternal: line break! sb contents=\"{}\"", sb.toString());
                 root.addChild(new TextNode(sb.toString()));
                 sb.setLength(0);
                 root.addChild(new LineBreakNode());
                 continue;
             }
+            LOGGER.info("parseInternal: appending char to buffer");
             sb.append(c);
+            LOGGER.info("parseInternal: sb contents=\"{}\"", sb.toString());
         }
         if (sb.length() > 0)
             root.addChild(new TextNode(sb.toString()));
@@ -59,12 +79,14 @@ public final class CraftdownParserImpl implements CraftdownParser {
     }
 
     private boolean handleChar(Node root, Scanner scanner, char c) {
+        LOGGER.info("handleChar: root={}", root);
         final char cp = scanner.peekPrevious();
         char cn;
         switch (c) {
         case '*':
             scanner.next();
             cn = scanner.peek();
+            LOGGER.info("handleChar: root={} END", root);
             if (cn == '*')
                 return handleStyleDouble(root, scanner, '*', cp, StyleNode.Type.BOLD);
             else
@@ -72,6 +94,7 @@ public final class CraftdownParserImpl implements CraftdownParser {
         case '_':
             scanner.next();
             cn = scanner.peek();
+            LOGGER.info("handleChar: root={} END", root);
             if (cn == '_')
                 return handleStyleDouble(root, scanner, '_', cp, StyleNode.Type.UNDERLINE);
             else
@@ -79,13 +102,12 @@ public final class CraftdownParserImpl implements CraftdownParser {
         case '~':
             scanner.next();
             cn = scanner.peek();
-            if (cn == '~')
+            if (cn == '~') {
+                LOGGER.info("handleChar: root={} END", root);
                 return handleStyleDouble(root, scanner, '~', cp, StyleNode.Type.STRIKETHROUGH);
-            else {
+            } else
                 // sorry nothing
-                scanner.seek(scanner.tell() - 1);
-                return false;
-            }
+                break;
         case '[':
             if (!parseLinks)
                 break;
@@ -93,24 +115,37 @@ public final class CraftdownParserImpl implements CraftdownParser {
         default:
             break;
         }
+        LOGGER.info("handleChar: root={} END", root);
         return false;
     }
 
     private boolean handleStyleDouble(Node root, Scanner scanner, char delimChar, char cp, StyleNode.Type styleType) {
         scanner.next();
         int pos = scanner.tell();
-        int count = scanner.until(delimChar);
-        // handle italic in bold/underline (***this*** or ___this___) "gracefully"
-        while (scanner.peek() == delimChar) {
-            count++;
+        int count = 0;
+        // get count until last delimiter
+        while (true) {
+            int count2 = scanner.until(delimChar + "" + delimChar);
+            LOGGER.info("handleStyleDouble: count2={}", count2);
+            if (count2 < 0)
+                break;
+            count += count2 + 1;
             scanner.next();
         }
+        count--;
+        if (count <= 0) {
+            LOGGER.info("handleStyleDouble: aborting since we didn't find a terminating delimiter");
+            LOGGER.info("handleStyleDouble: scanner={}", scanner);
+            // failure, no terminating delimiter found
+            scanner.seek(pos - 2);
+            return false;
+        }
+        LOGGER.info("handleStyleDouble: reading {} internal chars", count);
         scanner.seek(pos);
         String sub = scanner.read(count);
         if (sub == null) {
             // failure, probably didn't have an end
-            // rewind scanner and treat as normal text instead
-            scanner.seek(pos - (cp == '\\' ? 3 : 2));
+            scanner.seek(pos - 2);
             return false;
         }
         Node child;
@@ -131,18 +166,64 @@ public final class CraftdownParserImpl implements CraftdownParser {
     private boolean handleStyleSingle(Node root, Scanner scanner, char delimChar, char cp,
             @SuppressWarnings("SameParameterValue") StyleNode.Type styleType) {
         int pos = scanner.tell();
-        if (delimChar == '_' && !Character.isWhitespace(cp) && !isPunctuationOrSymbol(cp)) {
-            // cancel early
+        if (delimChar == '_' && cp != Scanner.END && !Character.isWhitespace(cp) && !isPunctuationOrSymbol(cp)) {
+            LOGGER.info("handleStyleSingle: aborting with special underscore clause, cp={}", cp);
+            LOGGER.info("handleStyleSingle: scanner={}", scanner);
+            // failure, underscore delimiter requires whitespace/punctuation/symbol beforehand
             scanner.seek(pos - 1);
             return false;
         }
-        int count = scanner.until(delimChar);
+        if (Character.isWhitespace(scanner.peek())) {
+            LOGGER.info("handleStyleSingle: aborting since we there's whitespace after the starting delimiter");
+            LOGGER.info("handleStyleSingle: scanner={}", scanner);
+            // failure, single delimiter requires non-whitespace after start
+            scanner.seek(pos - 1);
+            return false;
+        }
+        int count = 0;
+        // get count until last delimiter
+        while (true) {
+            int count2 = scanner.until(delimChar);
+            LOGGER.info("handleStyleSingle: count2={}", count2);
+            if (count2 < 0)
+                break;
+            count += count2 + 1;
+            scanner.next();
+            if (Character.isWhitespace(scanner.peek()))
+                break;
+        }
+        count--;
+        if (count <= 0) {
+            LOGGER.info("handleStyleSingle: aborting since we didn't find a terminating delimiter");
+            LOGGER.info("handleStyleSingle: scanner={}", scanner);
+            // failure, no terminating delimiter found
+            scanner.seek(pos - 1);
+            return false;
+        }
+        scanner.seek(pos + count - 1);
+        char beforeTerm = scanner.peek();
+        if (Character.isWhitespace(beforeTerm)) {
+            LOGGER.info("handleStyleSingle: aborting since we there's whitespace before the terminating delimiter");
+            LOGGER.info("handleStyleSingle: scanner={}", scanner);
+            // failure, single delimiter requires non-whitespace before end
+            scanner.seek(pos - 1);
+            return false;
+        }
+        LOGGER.info("handleStyleSingle: reading {} internal chars so far", count);
+        LOGGER.info("handleStyleSingle: scanner={}", scanner);
+        // check for mismatched delimiters
+        if (beforeTerm == delimChar) {
+            LOGGER.info("handleStyleSingle: aborting due to mismatched delimiter");
+            LOGGER.info("handleStyleSingle: scanner={}", scanner);
+            // failure, mismatched delimiter
+            scanner.seek(pos - 1);
+            return false;
+        }
         scanner.seek(pos);
         String sub = scanner.read(count);
         if (sub == null) {
             // failure, probably didn't have an end
-            // rewind scanner and treat as normal text instead
-            scanner.seek(pos - (cp == '\\' ? 2 : 1));
+            scanner.seek(pos);
             return false;
         }
         Node child;
@@ -180,8 +261,7 @@ public final class CraftdownParserImpl implements CraftdownParser {
         String text = scanner.read(textCount);
         if (text == null) {
             // failure, text probably didn't have an end
-            // rewind scanner and treat as normal text instead
-            scanner.seek(pos - (cp == '\\' ? 2 : 1));
+            scanner.seek(pos - 1);
             return false;
         }
         // part 2: get URL
@@ -189,8 +269,7 @@ public final class CraftdownParserImpl implements CraftdownParser {
         char potentialURLOpen = scanner.peek();
         if (potentialURLOpen != '(') {
             // failure, no URL start
-            // rewind scanner and treat as normal text instead
-            scanner.seek(pos - (cp == '\\' ? 2 : 1));
+            scanner.seek(pos - 1);
             return false;
         }
         scanner.next();
@@ -200,8 +279,7 @@ public final class CraftdownParserImpl implements CraftdownParser {
         String urlSrc = scanner.read(urlCount);
         if (urlSrc == null) {
             // failure, URL probably didn't have an end
-            // rewind scanner and treat as normal text instead
-            scanner.seek(pos - (cp == '\\' ? 2 : 1));
+            scanner.seek(pos - 1);
             return false;
         }
         // part 3: try to parse URL
@@ -210,8 +288,7 @@ public final class CraftdownParserImpl implements CraftdownParser {
             url = new URL(linkContext, urlSrc);
         } catch (MalformedURLException e) {
             // failure, URL is malformed
-            // rewind scanner and treat as normal text instead
-            scanner.seek(pos - (cp == '\\' ? 2 : 1));
+            scanner.seek(pos - 1);
             return false;
         }
         // part 4: put it together!
@@ -225,7 +302,7 @@ public final class CraftdownParserImpl implements CraftdownParser {
         }
         parseInternal(child, new Scanner(text));
         if (cp == '\\') {
-            root.addChild(new TextNode("("));
+            root.addChild(new TextNode("]("));
             parseInternal(root, new Scanner(urlSrc));
             root.addChild(new TextNode(")"));
         }
@@ -233,77 +310,4 @@ public final class CraftdownParserImpl implements CraftdownParser {
         return true;
     }
 
-    private static final class Scanner {
-        private static final char END = '\0';
-
-        private final char[] chars;
-        private int pos;
-
-        public Scanner(@NotNull String str) {
-            chars = str.toCharArray();
-            pos = 0;
-        }
-
-        public int tell() {
-            return pos;
-        }
-
-        public void seek(int pos) {
-            this.pos = Math.max(0, Math.min(pos, chars.length - 1));
-        }
-
-        public char peek() {
-            if (pos >= chars.length)
-                return END;
-            return chars[pos];
-        }
-
-        public char peekPrevious() {
-            if (pos - 1 < 0 || pos - 1 >= chars.length)
-                return END;
-            return chars[pos - 1];
-        }
-
-        @SuppressWarnings("UnusedReturnValue")
-        public char next() {
-            if (pos >= chars.length)
-                return END;
-            return chars[pos++];
-        }
-
-        public @Nullable String read(int count) {
-            if (count <= 0 || pos + count >= chars.length)
-                return null;
-            String str = new String(chars, pos, count);
-            pos += count;
-            return str;
-        }
-
-        public int until(char c) {
-            int count = 0;
-            while (peek() != c) {
-                if (peek() == END) {
-                    seek(pos);
-                    return -1;
-                }
-                count++;
-                next();
-            }
-            return count;
-        }
-
-        public int until(@NotNull String str) {
-            int count = 0;
-            while (peek() != END) {
-                int pos = tell();
-                String str2 = read(str.length());
-                seek(pos);
-                if (str.equals(str2))
-                    return count;
-                count++;
-                next();
-            }
-            return -1;
-        }
-    }
 }

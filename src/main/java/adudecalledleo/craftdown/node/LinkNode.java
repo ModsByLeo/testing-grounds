@@ -14,4 +14,11 @@ public final class LinkNode extends Node {
     public @NotNull URL getUrl() {
         return url;
     }
+
+    @Override
+    public String toString() {
+        return "LinkNode{" +
+                "url=" + url +
+                '}';
+    }
 }

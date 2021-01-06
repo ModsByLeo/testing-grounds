@@ -8,6 +8,7 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 
 import static adudecalledleo.testinggrounds.TestingGrounds.LOGGER;
@@ -29,10 +30,18 @@ class MarkdownCommand {
         );
     }
 
-    private static final CraftdownParser PARSER = CraftdownParser.builder().build();
+    private static final CraftdownParser PARSER = CraftdownParser.builder().parseLinks(true).build();
 
     private static void execute(ServerPlayerEntity player, String src) {
-        Node root = PARSER.parse(src.replaceAll("\\\\n", "\n"));
+        Node root;
+        try {
+            root = PARSER.parse(src.replaceAll("\\\\n", "\n"));
+        } catch (Exception e) {
+            player.sendMessage(new LiteralText("Parse failed :(").styled(style -> style.withColor(Formatting.RED)),
+                    false);
+            LOGGER.error("parse fucked up", e);
+            return;
+        }
         NodeDebugger nd = new NodeDebugger();
         LOGGER.info("NodeDebugger START src={}", src);
         root.visit(nd.nodeVisitor);
@@ -51,12 +60,14 @@ class MarkdownCommand {
 
         private void visit(@NotNull Node node) {
             LOGGER.info("{}{}", indent, node);
-            LOGGER.info("{}children:", indent);
-            String oldIndent = indent;
-            indent += " ";
-            nodeVisitor.visitChildren(node);
-            indent = oldIndent;
-            LOGGER.info("{}{} END", indent, node);
+            if (node.hasChildren()) {
+                LOGGER.info("{}children:", indent);
+                String oldIndent = indent;
+                indent += " ";
+                nodeVisitor.visitChildren(node);
+                indent = oldIndent;
+                LOGGER.info("{}{} END", indent, node);
+            }
         }
     }
 }

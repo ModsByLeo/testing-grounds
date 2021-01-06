@@ -50,6 +50,9 @@ public abstract class Node {
         return children.contains(node);
     }
 
+    public boolean hasChildren() {
+        return !children.isEmpty();
+    }
     public int getChildCount() {
         return children.size();
     }

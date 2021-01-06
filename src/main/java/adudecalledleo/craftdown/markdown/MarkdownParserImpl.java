@@ -1,6 +1,5 @@
-package adudecalledleo.craftdown.impl;
+package adudecalledleo.craftdown.markdown;
 
-import adudecalledleo.craftdown.CraftdownParser;
 import adudecalledleo.craftdown.node.*;
 import adudecalledleo.craftdown.util.CharUtils;
 import adudecalledleo.craftdown.util.NodeUtils;
@@ -12,11 +11,11 @@ import java.net.URL;
 
 import static adudecalledleo.craftdown.Craftdown.LOGGER;
 
-public final class CraftdownParserImpl implements CraftdownParser {
+final class MarkdownParserImpl implements MarkdownParser {
     private final boolean parseLinks;
     private final URL linkContext;
 
-    public CraftdownParserImpl(boolean parseLinks, URL linkContext) {
+    public MarkdownParserImpl(boolean parseLinks, URL linkContext) {
         this.parseLinks = parseLinks;
         this.linkContext = linkContext;
     }

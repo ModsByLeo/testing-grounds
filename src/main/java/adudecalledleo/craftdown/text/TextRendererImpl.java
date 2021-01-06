@@ -1,6 +1,5 @@
-package adudecalledleo.craftdown.impl;
+package adudecalledleo.craftdown.text;
 
-import adudecalledleo.craftdown.CraftdownRenderer;
 import adudecalledleo.craftdown.node.*;
 import adudecalledleo.craftdown.util.StyleUtils;
 import com.google.common.collect.ImmutableList;
@@ -9,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public final class CraftdownRendererImpl implements CraftdownRenderer {
+final class TextRendererImpl implements TextRenderer {
     @Override
     public @NotNull List<Text> render(@NotNull Node root) {
         NodeRenderer nodeRenderer = new NodeRenderer();

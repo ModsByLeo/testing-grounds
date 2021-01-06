@@ -1,13 +1,12 @@
-package adudecalledleo.craftdown;
+package adudecalledleo.craftdown.markdown;
 
-import adudecalledleo.craftdown.impl.CraftdownParserImpl;
 import adudecalledleo.craftdown.node.Node;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URL;
 
-public interface CraftdownParser {
+public interface MarkdownParser {
     @NotNull Node parse(@NotNull String str);
 
     static @NotNull Builder builder() {
@@ -33,8 +32,8 @@ public interface CraftdownParser {
             return this;
         }
 
-        public @NotNull CraftdownParser build() {
-            return new CraftdownParserImpl(parseLinks, linkContext);
+        public @NotNull MarkdownParser build() {
+            return new MarkdownParserImpl(parseLinks, linkContext);
         }
     }
 }

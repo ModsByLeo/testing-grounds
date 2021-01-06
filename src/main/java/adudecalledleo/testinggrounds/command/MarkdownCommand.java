@@ -2,7 +2,7 @@ package adudecalledleo.testinggrounds.command;
 
 import adudecalledleo.craftdown.node.Node;
 import adudecalledleo.craftdown.node.NodeVisitor;
-import adudecalledleo.craftdown.CraftdownParser;
+import adudecalledleo.craftdown.markdown.MarkdownParser;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
@@ -30,7 +30,7 @@ class MarkdownCommand {
         );
     }
 
-    private static final CraftdownParser PARSER = CraftdownParser.builder().parseLinks(true).build();
+    private static final MarkdownParser PARSER = MarkdownParser.builder().parseLinks(true).build();
 
     private static void execute(ServerPlayerEntity player, String src) {
         Node root;

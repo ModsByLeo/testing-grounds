@@ -1,13 +1,12 @@
-package adudecalledleo.craftdown;
+package adudecalledleo.craftdown.text;
 
-import adudecalledleo.craftdown.impl.CraftdownRendererImpl;
 import adudecalledleo.craftdown.node.Node;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public interface CraftdownRenderer {
+public interface TextRenderer {
     @NotNull List<Text> render(@NotNull Node root);
 
     static @NotNull Builder builder() {
@@ -17,8 +16,8 @@ public interface CraftdownRenderer {
     final class Builder {
         private Builder() { }
 
-        public @NotNull CraftdownRenderer build() {
-            return new CraftdownRendererImpl();
+        public @NotNull TextRenderer build() {
+            return new TextRendererImpl();
         }
     }
 }

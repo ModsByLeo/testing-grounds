@@ -1,11 +1,10 @@
 package adudecalledleo.craftdown.impl;
 
-import adudecalledleo.craftdown.node.*;
 import adudecalledleo.craftdown.CraftdownParser;
+import adudecalledleo.craftdown.node.*;
 import adudecalledleo.craftdown.util.CharUtils;
 import adudecalledleo.craftdown.util.NodeUtils;
 import adudecalledleo.craftdown.util.Scanner;
-import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
 import java.net.MalformedURLException;
@@ -13,7 +12,6 @@ import java.net.URL;
 
 import static adudecalledleo.craftdown.Craftdown.LOGGER;
 
-@ApiStatus.Internal
 public final class CraftdownParserImpl implements CraftdownParser {
     private final boolean parseLinks;
     private final URL linkContext;
@@ -68,7 +66,7 @@ public final class CraftdownParserImpl implements CraftdownParser {
                 LOGGER.info("parseInternal: line break! sb contents=\"{}\"", sb.toString());
                 root.addChild(new TextNode(sb.toString()));
                 sb.setLength(0);
-                root.addChild(new LineBreakNode());
+                root.addChild(LineBreakNode.INSTANCE);
                 continue;
             }
             LOGGER.info("parseInternal: appending char to buffer");

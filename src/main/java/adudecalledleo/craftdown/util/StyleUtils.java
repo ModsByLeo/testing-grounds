@@ -15,4 +15,10 @@ public final class StyleUtils {
         ((StyleAccessor) style).setUnderlined(underline);
         return style;
     }
+
+    public static @NotNull Style withStrikethrough(@NotNull Style style, @Nullable Boolean strikethrough) {
+        style = copy(style);
+        ((StyleAccessor) style).setStrikethrough(strikethrough);
+        return style;
+    }
 }

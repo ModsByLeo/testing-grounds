@@ -5,7 +5,7 @@ import net.minecraft.text.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class StyleUtil {
+public final class StyleUtils {
     public static @NotNull Style copy(@NotNull Style style) {
         return style.withColor(style.getColor());
     }

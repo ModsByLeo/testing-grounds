@@ -1,4 +1,4 @@
-package adudecalledleo.craftdown.impl;
+package adudecalledleo.craftdown.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

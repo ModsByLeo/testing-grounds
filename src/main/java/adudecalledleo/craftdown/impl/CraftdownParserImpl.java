@@ -2,7 +2,9 @@ package adudecalledleo.craftdown.impl;
 
 import adudecalledleo.craftdown.node.*;
 import adudecalledleo.craftdown.CraftdownParser;
-import adudecalledleo.craftdown.util.NodeUtil;
+import adudecalledleo.craftdown.util.CharUtils;
+import adudecalledleo.craftdown.util.NodeUtils;
+import adudecalledleo.craftdown.util.Scanner;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,7 +28,7 @@ public final class CraftdownParserImpl implements CraftdownParser {
         LOGGER.info("parse: STARTING!!!! src={}", src);
         Document root = new Document();
         parseInternal(root, new Scanner(src));
-        NodeUtil.mergeTextNodes(root);
+        NodeUtils.mergeTextNodes(root);
         LOGGER.info("parse: DONE!!!!!!");
         return root;
     }
@@ -166,7 +168,7 @@ public final class CraftdownParserImpl implements CraftdownParser {
     private boolean handleStyleSingle(Node root, Scanner scanner, char delimChar, char cp,
             @SuppressWarnings("SameParameterValue") StyleNode.Type styleType) {
         int pos = scanner.tell();
-        if (delimChar == '_' && cp != Scanner.END && !Character.isWhitespace(cp) && !isPunctuationOrSymbol(cp)) {
+        if (delimChar == '_' && cp != Scanner.END && !Character.isWhitespace(cp) && !CharUtils.isPunctuationOrSymbol(cp)) {
             LOGGER.info("handleStyleSingle: aborting with special underscore clause, cp={}", cp);
             LOGGER.info("handleStyleSingle: scanner={}", scanner);
             // failure, underscore delimiter requires whitespace/punctuation/symbol beforehand
@@ -239,17 +241,6 @@ public final class CraftdownParserImpl implements CraftdownParser {
             root.addChild(new TextNode(delimChar + ""));
         scanner.next();
         return true;
-    }
-
-    private static boolean isPunctuationOrSymbol(char c) {
-        final int type = Character.getType(c);
-        return type == Character.DASH_PUNCTUATION
-                || type == Character.START_PUNCTUATION  || type == Character.END_PUNCTUATION
-                || type == Character.CONNECTOR_PUNCTUATION
-                || type == Character.OTHER_PUNCTUATION
-                || type == Character.INITIAL_QUOTE_PUNCTUATION | type == Character.FINAL_QUOTE_PUNCTUATION
-                || type == Character.MATH_SYMBOL || type == Character.CURRENCY_SYMBOL
-                || type == Character.MODIFIER_SYMBOL || type == Character.OTHER_SYMBOL;
     }
 
     private boolean handleLink(Node root, Scanner scanner, char cp) {

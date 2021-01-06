@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 
 import static adudecalledleo.craftdown.Craftdown.LOGGER;
 
-public final class NodeUtil {
-    private NodeUtil() { }
+public final class NodeUtils {
+    private NodeUtils() { }
 
     public static void mergeTextNodes(@NotNull Node root) {
         LOGGER.info("mergeTextBoxes: {} START", root);

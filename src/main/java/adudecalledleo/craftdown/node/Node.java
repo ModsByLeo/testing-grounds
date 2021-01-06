@@ -6,8 +6,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
-import static adudecalledleo.craftdown.Craftdown.LOGGER;
-
 public abstract class Node {
     protected @Nullable Node parent;
     protected @NotNull List<Node> children;
@@ -28,20 +26,17 @@ public abstract class Node {
         return children;
     }
     public boolean addChild(@NotNull Node node) {
-        LOGGER.info("{}: adding node {}", this, node);
         node.unlink();
         node.setParent(this);
         return children.add(node);
     }
     public boolean removeChild(@NotNull Node node) {
-        LOGGER.info("{}: removing node {}", this, node);
         node.setParent(null);
         return children.remove(node);
     }
     public boolean insertChild(int index, @NotNull Node node) {
         if (index < 0 || index > getChildCount())
             return false;
-        LOGGER.info("{}: inserting node {} at {}", this, node, index);
         node.setParent(this);
         children.add(index, node);
         return true;

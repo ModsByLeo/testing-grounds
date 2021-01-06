@@ -6,9 +6,17 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.text.*;
 import org.jetbrains.annotations.NotNull;
 
+import java.net.URL;
 import java.util.List;
+import java.util.function.BiFunction;
 
 final class TextRendererImpl implements TextRenderer {
+    private final BiFunction<URL, Style, Style> linkStyleTransformer;
+
+    public TextRendererImpl(BiFunction<URL, Style, Style> linkStyleTransformer) {
+        this.linkStyleTransformer = linkStyleTransformer;
+    }
+
     @Override
     public @NotNull List<Text> render(@NotNull Node root) {
         NodeRenderer nodeRenderer = new NodeRenderer();
@@ -17,7 +25,7 @@ final class TextRendererImpl implements TextRenderer {
         return nodeRenderer.getLines();
     }
 
-    private static final class NodeRenderer {
+    private final class NodeRenderer {
         public final NodeVisitor nodeVisitor;
         private final StyleStack styleStack;
         private final ImmutableList.Builder<Text> builder;
@@ -59,13 +67,15 @@ final class TextRendererImpl implements TextRenderer {
                 nodeVisitor.visitChildren(node);
                 styleStack.pop();
             } else if (node instanceof LinkNode) {
-                Style style = styleStack.peek().withClickEvent(
-                        new ClickEvent(ClickEvent.Action.OPEN_URL, ((LinkNode) node).getUrl().toString()));
+                URL url = ((LinkNode) node).getUrl();
+                Style style = styleStack.peek().withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url.toString()));
+                style = linkStyleTransformer.apply(url, style);
                 styleStack.push(style);
                 nodeVisitor.visitChildren(node);
                 styleStack.pop();
             } else
-                throw new RuntimeException("Unsupported node type " + node.getClass());
+                // default to visiting children
+                nodeVisitor.visitChildren(node);
         }
 
         public void flush() {

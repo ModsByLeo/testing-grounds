@@ -1,15 +1,19 @@
 package adudecalledleo.testinggrounds.command;
 
-import adudecalledleo.craftdown.node.Node;
-import adudecalledleo.craftdown.node.NodeVisitor;
 import adudecalledleo.craftdown.markdown.MarkdownParser;
+import adudecalledleo.craftdown.node.Node;
+import adudecalledleo.craftdown.text.TextRenderer;
+import adudecalledleo.craftdown.util.StyleUtils;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.HoverEvent;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
 
 import static adudecalledleo.testinggrounds.TestingGrounds.LOGGER;
 import static com.mojang.brigadier.Command.SINGLE_SUCCESS;
@@ -31,6 +35,14 @@ class MarkdownCommand {
     }
 
     private static final MarkdownParser PARSER = MarkdownParser.builder().parseLinks(true).build();
+    private static final TextRenderer RENDERER = TextRenderer.builder()
+            .linkStyleTransformer((url, style) ->
+                    StyleUtils.withUnderline(
+                            style.withColor(Formatting.BLUE).withHoverEvent(
+                                    new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+                                            new LiteralText("Go to " + url.toString()))),
+                            true)
+            ).build();
 
     private static void execute(ServerPlayerEntity player, String src) {
         Node root;
@@ -42,32 +54,17 @@ class MarkdownCommand {
             LOGGER.error("parse fucked up", e);
             return;
         }
-        NodeDebugger nd = new NodeDebugger();
-        LOGGER.info("NodeDebugger START src={}", src);
-        root.visit(nd.nodeVisitor);
-        LOGGER.info("NodeDebugger END");
-        player.sendMessage(new LiteralText("Check the logs!"), false);
-    }
-
-    private static final class NodeDebugger {
-        private final NodeVisitor nodeVisitor;
-        private String indent;
-
-        public NodeDebugger() {
-            nodeVisitor = new NodeVisitor(this::visit);
-            indent = "";
+        List<Text> lines;
+        try {
+            lines = RENDERER.render(root);
+        }  catch (Exception e) {
+            player.sendMessage(new LiteralText("Render failed :(").styled(style -> style.withColor(Formatting.RED)),
+                    false);
+            LOGGER.error("render fucked up", e);
+            return;
         }
-
-        private void visit(@NotNull Node node) {
-            LOGGER.info("{}{}", indent, node);
-            if (node.hasChildren()) {
-                LOGGER.info("{}children:", indent);
-                String oldIndent = indent;
-                indent += " ";
-                nodeVisitor.visitChildren(node);
-                indent = oldIndent;
-                LOGGER.info("{}{} END", indent, node);
-            }
-        }
+        player.sendMessage(new LiteralText("Parse and render successful:"), false);
+        for (Text line : lines)
+            player.sendMessage(line, false);
     }
 }

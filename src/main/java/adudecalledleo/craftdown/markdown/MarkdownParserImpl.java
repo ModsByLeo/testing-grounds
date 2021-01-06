@@ -9,8 +9,6 @@ import org.jetbrains.annotations.NotNull;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import static adudecalledleo.craftdown.Craftdown.LOGGER;
-
 final class MarkdownParserImpl implements MarkdownParser {
     private final boolean parseLinks;
     private final URL linkContext;
@@ -22,36 +20,22 @@ final class MarkdownParserImpl implements MarkdownParser {
 
     @Override
     public @NotNull Node parse(@NotNull String src) {
-        LOGGER.info("parse: STARTING!!!! src={}", src);
         Document root = new Document();
         parseInternal(root, new Scanner(src));
         NodeUtils.mergeTextNodes(root);
-        LOGGER.info("parse: DONE!!!!!!");
         return root;
     }
 
     private void parseInternal(Node root, Scanner scanner) {
-        final int MAX_LOOP_COUNT = 50;
-        int loopCount = 0;
-        LOGGER.info("parseInternal: root={}, scanner={}", root, scanner);
         final StringBuilder sb = new StringBuilder();
         char c;
         while ((c = scanner.peek()) != Scanner.END) {
-            LOGGER.info("parseInternal: loopCount={}", loopCount);
-            loopCount++;
-            if (loopCount > MAX_LOOP_COUNT)
-                throw new RuntimeException("Stopping probably-infinite loop");
             Node curLast = null;
             if (root.getChildCount() > 0)
                 curLast = root.getChildAt(root.getChildCount() - 1);
-            LOGGER.info("parseInternal: got char '{}'!", c);
             if (handleChar(root, scanner, c)) {
-                LOGGER.info("parseInternal: special character!");
-                if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '\\') {
-                    LOGGER.info("parseInternal: deleting backslash");
+                if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '\\')
                     sb.deleteCharAt(sb.length() - 1);
-                }
-                LOGGER.info("parseInternal: sb contents=\"{}\"", sb.toString());
                 Node textNode = new TextNode(sb.toString());
                 sb.setLength(0);
                 if (curLast == null)
@@ -62,30 +46,24 @@ final class MarkdownParserImpl implements MarkdownParser {
             }
             scanner.next();
             if (c == '\n') {
-                LOGGER.info("parseInternal: line break! sb contents=\"{}\"", sb.toString());
                 root.addChild(new TextNode(sb.toString()));
                 sb.setLength(0);
                 root.addChild(new LineBreakNode());
                 continue;
             }
-            LOGGER.info("parseInternal: appending char to buffer");
             sb.append(c);
-            LOGGER.info("parseInternal: sb contents=\"{}\"", sb.toString());
         }
         if (sb.length() > 0)
             root.addChild(new TextNode(sb.toString()));
-        LOGGER.info("parseInternal: root={} END", root);
     }
 
     private boolean handleChar(Node root, Scanner scanner, char c) {
-        LOGGER.info("handleChar: root={}", root);
         final char cp = scanner.peekPrevious();
         char cn;
         switch (c) {
         case '*':
             scanner.next();
             cn = scanner.peek();
-            LOGGER.info("handleChar: root={} END", root);
             if (cn == '*')
                 return handleStyleDouble(root, scanner, '*', cp, StyleNode.Type.BOLD);
             else
@@ -93,7 +71,6 @@ final class MarkdownParserImpl implements MarkdownParser {
         case '_':
             scanner.next();
             cn = scanner.peek();
-            LOGGER.info("handleChar: root={} END", root);
             if (cn == '_')
                 return handleStyleDouble(root, scanner, '_', cp, StyleNode.Type.UNDERLINE);
             else
@@ -101,10 +78,9 @@ final class MarkdownParserImpl implements MarkdownParser {
         case '~':
             scanner.next();
             cn = scanner.peek();
-            if (cn == '~') {
-                LOGGER.info("handleChar: root={} END", root);
+            if (cn == '~')
                 return handleStyleDouble(root, scanner, '~', cp, StyleNode.Type.STRIKETHROUGH);
-            } else
+            else
                 // sorry nothing
                 break;
         case '[':
@@ -114,7 +90,6 @@ final class MarkdownParserImpl implements MarkdownParser {
         default:
             break;
         }
-        LOGGER.info("handleChar: root={} END", root);
         return false;
     }
 
@@ -125,7 +100,6 @@ final class MarkdownParserImpl implements MarkdownParser {
         // get count until last delimiter
         while (true) {
             int count2 = scanner.until(delimChar + "" + delimChar);
-            LOGGER.info("handleStyleDouble: count2={}", count2);
             if (count2 < 0)
                 break;
             count += count2 + 1;
@@ -133,13 +107,10 @@ final class MarkdownParserImpl implements MarkdownParser {
         }
         count--;
         if (count <= 0) {
-            LOGGER.info("handleStyleDouble: aborting since we didn't find a terminating delimiter");
-            LOGGER.info("handleStyleDouble: scanner={}", scanner);
             // failure, no terminating delimiter found
             scanner.seek(pos - 2);
             return false;
         }
-        LOGGER.info("handleStyleDouble: reading {} internal chars", count);
         scanner.seek(pos);
         String sub = scanner.read(count);
         if (sub == null) {
@@ -166,15 +137,11 @@ final class MarkdownParserImpl implements MarkdownParser {
             @SuppressWarnings("SameParameterValue") StyleNode.Type styleType) {
         int pos = scanner.tell();
         if (delimChar == '_' && cp != Scanner.END && !Character.isWhitespace(cp) && !CharUtils.isPunctuationOrSymbol(cp)) {
-            LOGGER.info("handleStyleSingle: aborting with special underscore clause, cp={}", cp);
-            LOGGER.info("handleStyleSingle: scanner={}", scanner);
             // failure, underscore delimiter requires whitespace/punctuation/symbol beforehand
             scanner.seek(pos - 1);
             return false;
         }
         if (Character.isWhitespace(scanner.peek())) {
-            LOGGER.info("handleStyleSingle: aborting since we there's whitespace after the starting delimiter");
-            LOGGER.info("handleStyleSingle: scanner={}", scanner);
             // failure, single delimiter requires non-whitespace after start
             scanner.seek(pos - 1);
             return false;
@@ -183,7 +150,6 @@ final class MarkdownParserImpl implements MarkdownParser {
         // get count until last delimiter
         while (true) {
             int count2 = scanner.until(delimChar);
-            LOGGER.info("handleStyleSingle: count2={}", count2);
             if (count2 < 0)
                 break;
             count += count2 + 1;
@@ -193,8 +159,6 @@ final class MarkdownParserImpl implements MarkdownParser {
         }
         count--;
         if (count <= 0) {
-            LOGGER.info("handleStyleSingle: aborting since we didn't find a terminating delimiter");
-            LOGGER.info("handleStyleSingle: scanner={}", scanner);
             // failure, no terminating delimiter found
             scanner.seek(pos - 1);
             return false;
@@ -202,18 +166,12 @@ final class MarkdownParserImpl implements MarkdownParser {
         scanner.seek(pos + count - 1);
         char beforeTerm = scanner.peek();
         if (Character.isWhitespace(beforeTerm)) {
-            LOGGER.info("handleStyleSingle: aborting since we there's whitespace before the terminating delimiter");
-            LOGGER.info("handleStyleSingle: scanner={}", scanner);
             // failure, single delimiter requires non-whitespace before end
             scanner.seek(pos - 1);
             return false;
         }
-        LOGGER.info("handleStyleSingle: reading {} internal chars so far", count);
-        LOGGER.info("handleStyleSingle: scanner={}", scanner);
         // check for mismatched delimiters
         if (beforeTerm == delimChar) {
-            LOGGER.info("handleStyleSingle: aborting due to mismatched delimiter");
-            LOGGER.info("handleStyleSingle: scanner={}", scanner);
             // failure, mismatched delimiter
             scanner.seek(pos - 1);
             return false;

@@ -65,7 +65,7 @@ final class MarkdownParserImpl implements MarkdownParser {
                 LOGGER.info("parseInternal: line break! sb contents=\"{}\"", sb.toString());
                 root.addChild(new TextNode(sb.toString()));
                 sb.setLength(0);
-                root.addChild(LineBreakNode.INSTANCE);
+                root.addChild(new LineBreakNode());
                 continue;
             }
             LOGGER.info("parseInternal: appending char to buffer");

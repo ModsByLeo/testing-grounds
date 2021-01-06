@@ -27,8 +27,7 @@ final class TextRendererImpl implements TextRenderer {
             nodeVisitor = new NodeVisitor(this::visit);
             styleStack = new StyleStack();
             builder = ImmutableList.builder();
-            styleStack.push(StyleUtils.withStrikethrough(StyleUtils.withUnderline(Style.EMPTY.withBold(false).withItalic(false),
-                    false), false));
+            styleStack.push(StyleUtils.ALL_OFF);
             currentText = new LiteralText("").setStyle(styleStack.peek());
         }
 

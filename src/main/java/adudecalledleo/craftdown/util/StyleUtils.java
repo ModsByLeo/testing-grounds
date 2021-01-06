@@ -6,6 +6,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public final class StyleUtils {
+    public static final Style ALL_OFF = StyleUtils.withStrikethrough(
+            StyleUtils.withUnderline(Style.EMPTY
+                            .withBold(false)
+                            .withItalic(false),
+                    false),
+            false);
+
     public static @NotNull Style copy(@NotNull Style style) {
         return style.withColor(style.getColor());
     }

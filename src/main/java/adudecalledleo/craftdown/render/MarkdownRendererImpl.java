@@ -60,7 +60,8 @@ public final class MarkdownRendererImpl implements MarkdownRenderer {
                 nodeVisitor.visit(node);
                 sb.append("](").append(((LinkNode) node).getUrl().toString()).append(')');
             } else
-                throw new RuntimeException("Unsupported node type " + node.getClass());
+                // default to visiting children
+                nodeVisitor.visitChildren(node);
         }
 
         public String getResult() {

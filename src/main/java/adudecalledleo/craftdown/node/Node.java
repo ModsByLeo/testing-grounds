@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public abstract class Node {
@@ -26,23 +27,43 @@ public abstract class Node {
         return children;
     }
     public boolean addChild(@NotNull Node node) {
+        children.add(node);
         node.unlink();
         node.setParent(this);
-        return children.add(node);
+        return true;
     }
     public boolean removeChild(@NotNull Node node) {
-        node.setParent(null);
-        return children.remove(node);
+        if (children.remove(node)) {
+            node.setParent(null);
+            return true;
+        }
+        return false;
     }
     public boolean insertChild(int index, @NotNull Node node) {
         if (index < 0 || index > getChildCount())
             return false;
-        node.setParent(this);
         children.add(index, node);
+        node.setParent(this);
         return true;
     }
     public boolean hasChild(@NotNull Node node) {
         return children.contains(node);
+    }
+
+    public boolean addChildren(@NotNull Collection<Node> nodes) {
+        boolean ret = false;
+        for (Node node : nodes)
+            ret |= addChild(node);
+        return ret;
+    }
+    public boolean removeChildren(@NotNull Collection<Node> nodes) {
+        boolean ret = false;
+        for (Node node : nodes)
+            ret |= removeChild(node);
+        return ret;
+    }
+    public boolean hasChildren(@NotNull Collection<Node> nodes) {
+        return children.containsAll(nodes);
     }
 
     public boolean hasChildren() {

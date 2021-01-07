@@ -22,7 +22,7 @@ final class MarkdownParserImpl implements MarkdownParser {
     public @NotNull Node parse(@NotNull String src) {
         Document root = new Document();
         parseInternal(root, new Scanner(src));
-        NodeUtils.mergeTextNodes(root);
+        NodeUtils.mergeNodes(root);
         return root;
     }
 

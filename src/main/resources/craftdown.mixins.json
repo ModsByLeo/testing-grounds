@@ -4,7 +4,9 @@
   "package": "adudecalledleo.craftdown.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "StyleAccessor"
+    "KeybindTextAccessor",
+    "StyleAccessor",
+    "TranslatableTextAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

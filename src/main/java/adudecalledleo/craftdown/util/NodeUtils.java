@@ -20,7 +20,7 @@ public final class NodeUtils {
     }
 
     private static final class NodeMerger {
-        private final NodeVisitor nodeVisitor;
+        public final NodeVisitor nodeVisitor;
         private final ArrayList<TextNode> textsToMerge;
         private final ArrayList<Node> stylesToMerge;
         private StyleNode.Type styleTypeToMerge;

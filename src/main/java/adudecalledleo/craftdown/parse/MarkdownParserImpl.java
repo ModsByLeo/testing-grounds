@@ -10,18 +10,20 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 final class MarkdownParserImpl implements MarkdownParser {
+    private final boolean specialUnderscoreHandling;
     private final boolean parseLinks;
     private final URL linkContext;
 
-    public MarkdownParserImpl(boolean parseLinks, URL linkContext) {
+    public MarkdownParserImpl(boolean specialUnderscoreHandling, boolean parseLinks, URL linkContext) {
+        this.specialUnderscoreHandling = specialUnderscoreHandling;
         this.parseLinks = parseLinks;
         this.linkContext = linkContext;
     }
 
     @Override
-    public @NotNull Node parse(@NotNull String src) {
+    public @NotNull Node parse(@NotNull String source) {
         Document root = new Document();
-        parseInternal(root, new Scanner(src));
+        parseInternal(root, new Scanner(source));
         NodeUtils.mergeNodes(root);
         return root;
     }
@@ -46,6 +48,8 @@ final class MarkdownParserImpl implements MarkdownParser {
             }
             scanner.next();
             if (c == '\n') {
+                if (sb.length() > 0 && sb.charAt(sb.length() - 1) == '\r')
+                    sb.deleteCharAt(sb.length() - 1);
                 root.addChild(new TextNode(sb.toString()));
                 sb.setLength(0);
                 root.addChild(new LineBreakNode());
@@ -96,16 +100,16 @@ final class MarkdownParserImpl implements MarkdownParser {
     private boolean handleStyleDouble(Node root, Scanner scanner, char delimChar, char cp, StyleNode.Type styleType) {
         scanner.next();
         int pos = scanner.tell();
-        int count = 0;
-        // get count until last delimiter
-        while (true) {
-            int count2 = scanner.until(delimChar + "" + delimChar);
-            if (count2 < 0)
-                break;
-            count += count2 + 1;
+        int count = scanner.until(delimChar + "" + delimChar);
+        if (delimChar != '~') {
+            // include single delimiter characters
             scanner.next();
+            scanner.next();
+            while (scanner.peek() == delimChar) {
+                count++;
+                scanner.next();
+            }
         }
-        count--;
         if (count <= 0) {
             // failure, no terminating delimiter found
             scanner.seek(pos - 2);
@@ -136,7 +140,9 @@ final class MarkdownParserImpl implements MarkdownParser {
     private boolean handleStyleSingle(Node root, Scanner scanner, char delimChar, char cp,
             @SuppressWarnings("SameParameterValue") StyleNode.Type styleType) {
         int pos = scanner.tell();
-        if (delimChar == '_' && cp != Scanner.END && !Character.isWhitespace(cp) && !CharUtils.isPunctuationOrSymbol(cp)) {
+        if (specialUnderscoreHandling
+                && delimChar == '_' && cp != Scanner.END
+                && !Character.isWhitespace(cp) && !CharUtils.isPunctuationOrSymbol(cp)) {
             // failure, underscore delimiter requires whitespace/punctuation/symbol beforehand
             scanner.seek(pos - 1);
             return false;

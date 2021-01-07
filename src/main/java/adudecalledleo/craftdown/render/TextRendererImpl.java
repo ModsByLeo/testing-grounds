@@ -1,4 +1,4 @@
-package adudecalledleo.craftdown.text;
+package adudecalledleo.craftdown.render;
 
 import adudecalledleo.craftdown.node.*;
 import adudecalledleo.craftdown.util.StyleUtils;

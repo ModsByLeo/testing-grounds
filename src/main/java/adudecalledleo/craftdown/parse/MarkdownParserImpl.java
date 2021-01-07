@@ -1,4 +1,4 @@
-package adudecalledleo.craftdown.markdown;
+package adudecalledleo.craftdown.parse;
 
 import adudecalledleo.craftdown.node.*;
 import adudecalledleo.craftdown.util.CharUtils;

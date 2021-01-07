@@ -1,8 +1,8 @@
 package adudecalledleo.testinggrounds.command;
 
-import adudecalledleo.craftdown.markdown.MarkdownParser;
+import adudecalledleo.craftdown.parse.MarkdownParser;
 import adudecalledleo.craftdown.node.Node;
-import adudecalledleo.craftdown.text.TextRenderer;
+import adudecalledleo.craftdown.render.TextRenderer;
 import adudecalledleo.craftdown.util.StyleUtils;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;

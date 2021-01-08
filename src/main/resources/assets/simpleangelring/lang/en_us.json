@@ -1,5 +1,9 @@
 {
   "item.simpleangelring.angel_ring": "Angel Ring",
-  "item.simpleangelring.angel_ring.tooltip[0]": "Grants creative flight,",
-  "item.simpleangelring.angel_ring.tooltip[1]": "as long as it's in your inventory."
+  "item.simpleangelring.angel_ring.enabled": "Angel Ring enabled!",
+  "item.simpleangelring.angel_ring.disabled": "Angel Ring disabled!",
+  "item.simpleangelring.angel_ring.tooltip[0]": "Grants creative flight and disables fall damage,",
+  "item.simpleangelring.angel_ring.tooltip[1]": "as long as it's enabled in your inventory.",
+  "item.simpleangelring.angel_ring.tooltip[2]": "Use while sneaking to toggle.",
+  "item.simpleangelring.angel_ring.tooltip.disabled": "(DISABLED!)"
 }

@@ -1,0 +1,8 @@
+{
+  "angel_ring.enabled": {
+    "sounds": [ "minecraft:random/click" ]
+  },
+  "angel_ring.disabled": {
+    "sounds": [ "minecraft:random/click" ]
+  }
+}

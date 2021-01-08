@@ -15,11 +15,6 @@ repositories {
         name = "ADudeCalledLeo's Fabric mods"
         url = "https://dl.bintray.com/adudecalledleo/mcmods.fabric"
     }
-    // for Simple Angel Ring
-    maven {
-        name = "Ladysnake Libs"
-        url = "https://dl.bintray.com/ladysnake/libs"
-    }
 }
 
 def depImpl(String id, boolean include = false) {
@@ -61,9 +56,6 @@ dependencies {
     // You may need to force-disable transitiveness on them.
     depImpl("adudecalledleo.mcmods.fabric:lionutils:${project.lionutils_version}", true)
     depImpl "io.github.prospector:modmenu:${project.modmenu_version}"
-
-    // for Simple Angel Ring
-    depImpl("io.github.ladysnake:PlayerAbilityLib:${project.pal_version}", false)
 }
 
 if (Boolean.valueOf(project.use_runtime_deps)) {

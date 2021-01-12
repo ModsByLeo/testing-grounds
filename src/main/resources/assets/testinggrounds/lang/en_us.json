@@ -1,4 +1,8 @@
 {
   "itemGroup.testinggrounds.mcmail": "MCMail",
-  "block.testinggrounds.mailbox": "Mailbox"
+  "block.testinggrounds.mailbox": "Mailbox",
+  "effect.testinggrounds.invincibility": "Invincibility",
+  "item.minecraft.potion.effect.invincibility": "Potion of Invincibility",
+  "item.minecraft.splash_potion.effect.invincibility": "Splash Potion of Invincibility",
+  "item.minecraft.lingering_potion.effect.invincibility": "Lingering Potion of Invincibility"
 }

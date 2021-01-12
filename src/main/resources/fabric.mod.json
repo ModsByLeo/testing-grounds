@@ -17,14 +17,14 @@
       "adudecalledleo.testinggrounds.client.TestingGroundsClient"
     ],
     "main": [
-      "adudecalledleo.entitydamageevent.impl.Initializer",
+      "adudecalledleo.entitydamageevents.impl.Initializer",
       "adudecalledleo.craftdown.Craftdown",
       "adudecalledleo.serversiding.ServerSiding",
       "adudecalledleo.mcmail.MCMail",
       "adudecalledleo.testinggrounds.TestingGrounds"
     ],
     "mm:early_risers": [
-      "adudecalledleo.entitydamageevent.impl.CallbackInjector"
+      "adudecalledleo.entitydamageevents.impl.CallbackInjector"
     ]
   },
   "mixins": [

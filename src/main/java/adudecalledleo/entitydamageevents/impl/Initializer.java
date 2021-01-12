@@ -1,4 +1,4 @@
-package adudecalledleo.entitydamageevent.impl;
+package adudecalledleo.entitydamageevents.impl;
 
 import net.fabricmc.api.ModInitializer;
 import org.apache.logging.log4j.LogManager;
@@ -10,6 +10,6 @@ public class Initializer implements ModInitializer {
     @Override
     public void onInitialize() {
         LOGGER.info("Entity Damage Events initializing!!!");
-        EntityDamageEventInternals.initialize();
+        EntityDamageEventsInternals.initialize();
     }
 }

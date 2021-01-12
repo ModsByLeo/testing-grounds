@@ -1,4 +1,4 @@
-package adudecalledleo.entitydamageevent.impl;
+package adudecalledleo.entitydamageevents.impl;
 
 import com.chocohead.mm.api.ClassTinkerers;
 import org.apache.logging.log4j.LogManager;
@@ -59,7 +59,7 @@ public class CallbackInjector implements Runnable {
                 // note that this'll just return false if this entity already tried to invoke this tick,
                 // meaning every entity will only invoke *once* per tick, no matter how many superclasses deep it is
                 insnList.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
-                        "adudecalledleo/entitydamageevent/impl/EntityDamageEventInternals",
+                        "adudecalledleo/entitydamageevents/impl/EntityDamageEventInternals",
                         "invoke",
                         "(Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/damage/DamageSource;F)Z"));
                 insnList.add(new JumpInsnNode(Opcodes.IFEQ, continueLabel));

@@ -1,6 +1,6 @@
 package adudecalledleo.testinggrounds;
 
-import adudecalledleo.entitydamageevent.api.EntityDamageEvent;
+import adudecalledleo.entitydamageevents.api.EntityDamageEvents;
 import adudecalledleo.lionutils.LoggerUtil;
 import adudecalledleo.testinggrounds.block.ModBlocks;
 import adudecalledleo.testinggrounds.block.entity.ModBlockEntities;
@@ -33,7 +33,7 @@ public class TestingGrounds implements ModInitializer {
         ModItems.register();
         ModCommands.register();
 
-        EntityDamageEvent.of(EntityType.ZOMBIE).register((target, source, amount) ->
+        EntityDamageEvents.of(EntityType.ZOMBIE).registerBefore((target, source, amount) ->
                 target.hasStatusEffect(ModStatusEffects.INVINCIBILITY)
                         ? TriState.TRUE
                         : TriState.DEFAULT);

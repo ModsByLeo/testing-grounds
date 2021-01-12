@@ -98,23 +98,24 @@ public final class EntityDamageEventsInternals {
         return ((Impl<T>) CLASS_DAMAGE_EVENTS.get(clazz)).beforeEvent.invoker().beforeEntityDamage(target, source, amount);
     }
 
-    public static <T extends Entity> boolean invokeBefore(T target, DamageSource source, float amount) {
+    public static <T extends Entity> boolean invoke(T target, DamageSource source, float amount) {
+
         if (!ENTITIES_HURT_THIS_TICK.add(target))
             return false;
         TriState state = invokeSuperBefore(target, source, amount, target.getClass());
         boolean ret = false;
         if (state != TriState.DEFAULT)
-            ret = !state.get();
+            ret = state.get();
         else {
             //noinspection unchecked
             Impl<T> impl = (Impl<T>) DAMAGE_EVENTS.get(target.getType());
             if (impl != null)
-                ret = !impl.beforeEvent.invoker().beforeEntityDamage(target, source, amount).orElse(false);
+                ret = impl.beforeEvent.invoker().beforeEntityDamage(target, source, amount).orElse(false);
         }
         if (ret)
-            invokeAfter(target, source, amount);
-        else
             invokeCancelled(target, source, amount);
+        else
+            invokeAfter(target, source, amount);
         return ret;
     }
 

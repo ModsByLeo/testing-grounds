@@ -15,6 +15,8 @@ repositories {
         name = "ADudeCalledLeo's Fabric mods"
         url = "https://dl.bintray.com/adudecalledleo/mcmods.fabric"
     }
+    // for EntityDamageEvent
+    maven { url "https://jitpack.io" }
 }
 
 def depImpl(String id, boolean include = false) {
@@ -56,6 +58,9 @@ dependencies {
     // You may need to force-disable transitiveness on them.
     depImpl("adudecalledleo.mcmods.fabric:lionutils:${project.lionutils_version}", true)
     depImpl "io.github.prospector:modmenu:${project.modmenu_version}"
+
+    // for EntityDamageEvent
+    depImpl("com.github.Chocohead:Fabric-ASM:v2.1", true)
 }
 
 if (Boolean.valueOf(project.use_runtime_deps)) {

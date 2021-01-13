@@ -49,8 +49,11 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
         }
     }
 
-    public static String rtEntity, rtDamageSource, rtDamageName, rtDamageDesc, rtInvokeDamageDesc;
     public static final ObjectOpenHashSet<String> ENTITY_SUBCLASSES = new ObjectOpenHashSet<>();
+
+    public static String rtEntity, rtDamageSource;
+    public static String rtDamageName, rtDamageDesc, rtInvokeDamageDesc;
+    public static String rtTickName, rtInvokeTickDesc;
 
     private static byte[] tryInjectCallback(final byte[] original) {
         if (original == null)
@@ -82,39 +85,12 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
             if ((method.access & Opcodes.ACC_PUBLIC) == 0)
                 // method must be public
                 continue;
-            if (rtDamageName.equals(method.name) && rtDamageDesc.equals(method.desc)) //noinspection CommentedOutCode
-            {
-                final InsnList instructions = new InsnList();
-
-                // inject the following code block into the top of the method:
-                /*
-                if (EntityDamageEventsInternals.invoke(this, source, amount))
-                    return false;
-                 */
-
-                final LabelNode continueLabel = new LabelNode();
-
-                // load up ze locals
-                instructions.add(new VarInsnNode(Opcodes.ALOAD, 0)); // this
-                instructions.add(new VarInsnNode(Opcodes.ALOAD, 1)); // source
-                instructions.add(new VarInsnNode(Opcodes.FLOAD, 2)); // amount
-                // invoke our damage events (if they exist) via EntityDamageEventsInternals.invoke
-                // note that this'll just return false if this entity already tried to invoke this tick,
-                // meaning every entity will only invoke *once* per tick, no matter how many superclasses deep it is
-                instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
-                        "adudecalledleo/entityevents/impl/EntityDamageEventsInternals",
-                        "invoke",
-                        rtInvokeDamageDesc));
-                instructions.add(new JumpInsnNode(Opcodes.IFEQ, continueLabel));
-                // if we should cancel, return false
-                instructions.add(new InsnNode(Opcodes.ICONST_0));
-                instructions.add(new InsnNode(Opcodes.IRETURN));
-                // else, continue with the rest of the method
-                instructions.add(continueLabel);
-
-                method.instructions.insert(instructions);
+            if (rtDamageName.equals(method.name) && rtDamageDesc.equals(method.desc)) {
+                method.instructions.insert(getDamageInjectionInstructions());
                 modified = true;
-                break;
+            } else if (rtTickName.equals(method.name) && "()V".equals(method.desc)) {
+                method.instructions.insert(getTickInjectionInstructions());
+                modified = true;
             }
         }
 
@@ -124,6 +100,68 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
         ClassWriter classWriter = new ClassWriter(classReader, ClassWriter.COMPUTE_FRAMES);
         classNode.accept(classWriter);
         return classWriter.toByteArray();
+    }
+
+    @SuppressWarnings("CommentedOutCode")
+    private static InsnList getDamageInjectionInstructions() {
+        final InsnList instructions = new InsnList();
+
+        // inject the following code block into the top of the method:
+        /*
+        if (EntityDamageEventsInternals.invoke(this, source, amount))
+            return false;
+         */
+
+        final LabelNode continueLabel = new LabelNode();
+
+        // load up ze locals
+        instructions.add(new VarInsnNode(Opcodes.ALOAD, 0)); // this
+        instructions.add(new VarInsnNode(Opcodes.ALOAD, 1)); // source
+        instructions.add(new VarInsnNode(Opcodes.FLOAD, 2)); // amount
+        // invoke our damage events (if they exist) via EntityDamageEventsInternals.invoke
+        // note that this'll just return false if this entity already tried to invoke this tick,
+        // meaning every entity will only invoke *once* per tick, no matter how many superclasses deep it is
+        instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
+                "adudecalledleo/entityevents/impl/EntityDamageEventsInternals",
+                "invoke",
+                rtInvokeDamageDesc));
+        instructions.add(new JumpInsnNode(Opcodes.IFEQ, continueLabel));
+        // if we should cancel, return false
+        instructions.add(new InsnNode(Opcodes.ICONST_0));
+        instructions.add(new InsnNode(Opcodes.IRETURN));
+        // else, continue with the rest of the method
+        instructions.add(continueLabel);
+
+        return instructions;
+    }
+
+    private static InsnList getTickInjectionInstructions() {
+        final InsnList instructions = new InsnList();
+
+        // inject the following code block into the top of the method:
+        /*
+        if (EntityTickEventsInternals.invoke(this))
+            return;
+         */
+
+        final LabelNode continueLabel = new LabelNode();
+
+        // load up our singular local
+        instructions.add(new VarInsnNode(Opcodes.ALOAD, 0)); // this
+        // invoke our tick events (if they exist) via EntityTickEventsInternals.invoke
+        // note that this'll just return false if this entity already tried to invoke this tick,
+        // meaning every entity will only invoke *once* per tick, no matter how many superclasses deep it is
+        instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
+                "adudecalledleo/entityevents/impl/EntityTickEventsInternals",
+                "invoke",
+                rtInvokeTickDesc));
+        instructions.add(new JumpInsnNode(Opcodes.IFEQ, continueLabel));
+        // if we should cancel, return
+        instructions.add(new InsnNode(Opcodes.RETURN));
+        // else, continue with the rest of the method
+        instructions.add(continueLabel);
+
+        return instructions;
     }
 
     @Override
@@ -139,6 +177,9 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
                 "method_5643", "(Lnet/minecraft/class_1297;Lnet/minecraft/class_1282;F)Z");
         rtDamageDesc = String.format("(L%s;F)Z", rtDamageSource);
         rtInvokeDamageDesc = String.format("(L%s;L%s;F)Z", rtEntity, rtDamageSource);
+        rtTickName = map.mapMethodName("intermediary", "net.minecraft.class_1297",
+                "method_18756", "()V");
+        rtInvokeTickDesc = String.format("(L%s;)Z", rtEntity);
 
         ENTITY_SUBCLASSES.add(rtEntity.replace('.', '/'));
 

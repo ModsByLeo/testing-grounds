@@ -12,9 +12,8 @@
   "icon": "assets/testinggrounds/icon.png",
   "environment": "*",
   "entrypoints": {
-    "client": [
-      "adudecalledleo.gooeyrender.GooeyRender",
-      "adudecalledleo.testinggrounds.client.TestingGroundsClient"
+    "preLaunch": [
+      "adudecalledleo.entitydamageevents.impl.PreLaunchInitializer"
     ],
     "main": [
       "adudecalledleo.entitydamageevents.impl.Initializer",
@@ -23,8 +22,9 @@
       "adudecalledleo.mcmail.MCMail",
       "adudecalledleo.testinggrounds.TestingGrounds"
     ],
-    "mm:early_risers": [
-      "adudecalledleo.entitydamageevents.impl.CallbackInjector"
+    "client": [
+      "adudecalledleo.gooeyrender.GooeyRender",
+      "adudecalledleo.testinggrounds.client.TestingGroundsClient"
     ]
   },
   "mixins": [

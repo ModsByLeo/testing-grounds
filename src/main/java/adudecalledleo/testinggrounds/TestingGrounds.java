@@ -11,7 +11,6 @@ import adudecalledleo.testinggrounds.item.ModItems;
 import adudecalledleo.testinggrounds.potion.ModPotions;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.util.TriState;
-import net.minecraft.entity.EntityType;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Logger;
 
@@ -33,7 +32,7 @@ public class TestingGrounds implements ModInitializer {
         ModItems.register();
         ModCommands.register();
 
-        EntityDamageEvents.of(EntityType.ZOMBIE).registerBefore((target, source, amount) ->
+        EntityDamageEvents.living().registerBefore((target, source, amount) ->
                 target.hasStatusEffect(ModStatusEffects.INVINCIBILITY)
                         ? TriState.TRUE
                         : TriState.DEFAULT);

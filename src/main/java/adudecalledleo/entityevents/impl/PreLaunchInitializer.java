@@ -1,4 +1,4 @@
-package adudecalledleo.entitydamageevents.impl;
+package adudecalledleo.entityevents.impl;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.loader.api.FabricLoader;
@@ -17,7 +17,7 @@ import java.lang.reflect.Method;
 
 @ApiStatus.Internal
 public class PreLaunchInitializer implements PreLaunchEntrypoint {
-    public static final Logger LOGGER = LogManager.getLogger("Entity Damage Events|PreLaunchInitializer");
+    public static final Logger LOGGER = LogManager.getLogger("Entity Events|PreLaunch");
 
     private static final Field ACTIVE_TRANSFORMER, MIXIN_TRANSFORMER;
     static {
@@ -102,7 +102,7 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
                 // note that this'll just return false if this entity already tried to invoke this tick,
                 // meaning every entity will only invoke *once* per tick, no matter how many superclasses deep it is
                 instructions.add(new MethodInsnNode(Opcodes.INVOKESTATIC,
-                        "adudecalledleo/entitydamageevents/impl/EntityDamageEventsInternals",
+                        "adudecalledleo/entityevents/impl/EntityDamageEventsInternals",
                         "invoke",
                         rtInvokeDamageDesc));
                 instructions.add(new JumpInsnNode(Opcodes.IFEQ, continueLabel));
@@ -128,7 +128,7 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
 
     @Override
     public void onPreLaunch() {
-        LOGGER.info("Oh god what have I done [Entity Damage Events pregaming!]");
+        LOGGER.info("Oh god what have I done [Entity Events pregaming!]");
 
         // get runtime names
         MappingResolver map = FabricLoader.getInstance().getMappingResolver();

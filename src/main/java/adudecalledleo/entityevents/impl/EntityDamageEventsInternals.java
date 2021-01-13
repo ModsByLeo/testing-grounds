@@ -1,6 +1,6 @@
-package adudecalledleo.entitydamageevents.impl;
+package adudecalledleo.entityevents.impl;
 
-import adudecalledleo.entitydamageevents.api.EntityDamageEvents;
+import adudecalledleo.entityevents.api.EntityDamageEvents;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.fabricmc.fabric.api.event.Event;

@@ -13,10 +13,10 @@
   "environment": "*",
   "entrypoints": {
     "preLaunch": [
-      "adudecalledleo.entitydamageevents.impl.PreLaunchInitializer"
+      "adudecalledleo.entityevents.impl.PreLaunchInitializer"
     ],
     "main": [
-      "adudecalledleo.entitydamageevents.impl.Initializer",
+      "adudecalledleo.entityevents.impl.Initializer",
       "adudecalledleo.craftdown.Craftdown",
       "adudecalledleo.serversiding.ServerSiding",
       "adudecalledleo.mcmail.MCMail",

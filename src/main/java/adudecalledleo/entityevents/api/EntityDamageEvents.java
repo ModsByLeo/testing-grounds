@@ -1,6 +1,6 @@
-package adudecalledleo.entitydamageevents.api;
+package adudecalledleo.entityevents.api;
 
-import adudecalledleo.entitydamageevents.impl.EntityDamageEventsInternals;
+import adudecalledleo.entityevents.impl.EntityDamageEventsInternals;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;

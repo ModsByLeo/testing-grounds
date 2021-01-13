@@ -1,6 +1,6 @@
 package adudecalledleo.testinggrounds;
 
-import adudecalledleo.entitydamageevents.api.EntityDamageEvents;
+import adudecalledleo.entityevents.api.EntityDamageEvents;
 import adudecalledleo.lionutils.LoggerUtil;
 import adudecalledleo.testinggrounds.block.ModBlocks;
 import adudecalledleo.testinggrounds.block.entity.ModBlockEntities;

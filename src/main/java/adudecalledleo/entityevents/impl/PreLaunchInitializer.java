@@ -135,6 +135,7 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
         return instructions;
     }
 
+    @SuppressWarnings("CommentedOutCode")
     private static InsnList getTickInjectionInstructions() {
         final InsnList instructions = new InsnList();
 

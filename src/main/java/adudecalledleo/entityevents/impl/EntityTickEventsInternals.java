@@ -1,6 +1,7 @@
 package adudecalledleo.entityevents.impl;
 
 import adudecalledleo.entityevents.api.EntityTickEvents;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.fabricmc.fabric.api.event.Event;
@@ -9,6 +10,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.tag.Tag;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -65,6 +67,8 @@ public final class EntityTickEventsInternals {
             new ReferenceOpenHashSet<>();
     private static final Reference2ReferenceOpenHashMap<EntityType<? extends Entity>, Impl<? extends Entity>> TICK_EVENTS =
             new Reference2ReferenceOpenHashMap<>();
+    private static final Reference2ReferenceOpenHashMap<Tag<EntityType<?>>, Impl<? extends Entity>> TAG_TICK_EVENTS =
+            new Reference2ReferenceOpenHashMap<>();
     private static final Reference2ReferenceOpenHashMap<Class<? extends Entity>, Impl<? extends Entity>> CLASS_TICK_EVENTS =
             new Reference2ReferenceOpenHashMap<>();
 
@@ -77,26 +81,47 @@ public final class EntityTickEventsInternals {
         return (EntityTickEvents<T>) TICK_EVENTS.computeIfAbsent(type, type1 -> new Impl<>());
     }
 
+    public static @NotNull EntityTickEvents<Entity> getOrCreateTag(Tag<EntityType<? extends Entity>> tag) {
+        //noinspection unchecked
+        return (EntityTickEvents<Entity>) TAG_TICK_EVENTS.computeIfAbsent(tag, tag1 -> new Impl<>());
+    }
+
     public static <T extends Entity> @NotNull EntityTickEvents<T> getOrCreateClass(Class<T> clazz) {
         //noinspection unchecked
         return (EntityTickEvents<T>) CLASS_TICK_EVENTS.computeIfAbsent(clazz, clazz1 -> new Impl<>());
     }
 
     @SuppressWarnings("RedundantSuppression")
-    private static <T extends Entity> @NotNull TriState invokeSuperBefore(T target,
+    private static <T extends Entity> @NotNull TriState invokeSuperBefore(T entity,
             Class<? extends Entity> clazz) {
         TriState state = TriState.DEFAULT;
         if (Entity.class.isAssignableFrom(clazz.getSuperclass()))
             //noinspection unchecked
-            state = invokeSuperBefore(target, (Class<? extends Entity>) clazz.getSuperclass());
+            state = invokeSuperBefore(entity, (Class<? extends Entity>) clazz.getSuperclass());
         if (state != TriState.DEFAULT)
             return state;
         if (!CLASS_TICK_EVENTS.containsKey(clazz))
             return TriState.DEFAULT;
         //noinspection RedundantCast,unchecked
-        return ((Impl<T>) CLASS_TICK_EVENTS.get(clazz)).beforeEvent.invoker().beforeEntityTick(target);
+        return ((Impl<T>) CLASS_TICK_EVENTS.get(clazz)).beforeEvent.invoker().beforeEntityTick(entity);
     }
 
+    @SuppressWarnings("RedundantSuppression")
+    private static <T extends Entity> @NotNull TriState invokeTagBefore(T entity) {
+        TriState state = TriState.DEFAULT;
+        for (Reference2ReferenceMap.Entry<Tag<EntityType<?>>, Impl<? extends Entity>> entry
+                : TAG_TICK_EVENTS.reference2ReferenceEntrySet()) {
+            if (entry.getKey().contains(entity.getType())) {
+                //noinspection RedundantCast,unchecked
+                state = ((Impl<T>) entry.getValue()).beforeEvent.invoker().beforeEntityTick(entity);
+                if (state != TriState.DEFAULT)
+                    return state;
+            }
+        }
+        return state;
+    }
+
+    @SuppressWarnings("unused")
     public static <T extends Entity> boolean invoke(T entity) {
         if (!ENTITIES_INVOKED_THIS_TICK.add(entity))
             return false;
@@ -105,10 +130,15 @@ public final class EntityTickEventsInternals {
         if (state != TriState.DEFAULT)
             ret = state.get();
         else {
-            //noinspection unchecked
-            Impl<T> impl = (Impl<T>) TICK_EVENTS.get(entity.getType());
-            if (impl != null)
-                ret = impl.beforeEvent.invoker().beforeEntityTick(entity).orElse(false);
+            state = invokeTagBefore(entity);
+            if (state != TriState.DEFAULT)
+                ret = state.get();
+            else {
+                //noinspection unchecked
+                Impl<T> impl = (Impl<T>) TICK_EVENTS.get(entity.getType());
+                if (impl != null)
+                    ret = impl.beforeEvent.invoker().beforeEntityTick(entity).orElse(false);
+            }
         }
         if (ret)
             invokeCancelled(entity);
@@ -127,8 +157,18 @@ public final class EntityTickEventsInternals {
         consumer.accept((Impl<T>) CLASS_TICK_EVENTS.get(clazz));
     }
 
+    private static void invokeTag(Entity entity, Consumer<Impl<Entity>> consumer) {
+        for (Reference2ReferenceMap.Entry<Tag<EntityType<?>>, Impl<? extends Entity>> entry
+                : TAG_TICK_EVENTS.reference2ReferenceEntrySet()) {
+            if (entry.getKey().contains(entity.getType()))
+                //noinspection unchecked
+                consumer.accept((Impl<Entity>) entry.getValue());
+        }
+    }
+
     private static <T extends Entity> void invokeCancelled(T entity) {
         invokeSuper(entity.getClass(), impl -> impl.cancelledEvent.invoker().entityTickCancelled(entity));
+        invokeTag(entity, impl -> impl.cancelledEvent.invoker().entityTickCancelled(entity));
         //noinspection unchecked
         Impl<T> impl = (Impl<T>) TICK_EVENTS.get(entity.getType());
         if (impl == null)
@@ -139,6 +179,7 @@ public final class EntityTickEventsInternals {
     // TODO this isn't actually called after the tick but I don't care enough to implement that
     private static <T extends Entity> void invokeAfter(T entity) {
         invokeSuper(entity.getClass(), impl -> impl.afterEvent.invoker().afterEntityTick(entity));
+        invokeTag(entity, impl -> impl.afterEvent.invoker().afterEntityTick(entity));
         //noinspection unchecked
         Impl<T> impl = (Impl<T>) TICK_EVENTS.get(entity.getType());
         if (impl == null)

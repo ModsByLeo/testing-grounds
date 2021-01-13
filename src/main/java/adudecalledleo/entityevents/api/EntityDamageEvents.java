@@ -9,18 +9,24 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.AmbientEntity;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.passive.PassiveEntity;
+import net.minecraft.tag.EntityTypeTags;
+import net.minecraft.tag.Tag;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("UnusedReturnValue")
 public interface EntityDamageEvents<T extends Entity> {
-    static <T extends Entity> @NotNull EntityDamageEvents<T> of(EntityType<T> type) {
+    static <T extends Entity> @NotNull EntityDamageEvents<T> of(@NotNull EntityType<T> type) {
         return EntityDamageEventsInternals.getOrCreate(type);
+    }
+
+    static @NotNull EntityDamageEvents<Entity> inTag(@NotNull Tag<EntityType<?>> tag) {
+        return EntityDamageEventsInternals.getOrCreateTag(tag);
     }
 
     // ORDER: ofClass of upper superclass, then ofClass of lower superclasses, then ofClass, then of
     // for example: a zombie would run ofClass(Entity), then ofClass(LivingEntity), then ofClass(HostileEntity),
     // then ofClass(ZombieEntity), then of(EntityType.ZOMBIE)
-    static <T extends Entity> @NotNull EntityDamageEvents<T> ofClass(Class<T> tClass) {
+    static <T extends Entity> @NotNull EntityDamageEvents<T> ofClass(@NotNull Class<T> tClass) {
         return EntityDamageEventsInternals.getOrCreateClass(tClass);
     }
 

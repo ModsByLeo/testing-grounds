@@ -1,6 +1,7 @@
 package adudecalledleo.entityevents.impl;
 
 import adudecalledleo.entityevents.api.EntityDamageEvents;
+import it.unimi.dsi.fastutil.objects.Reference2ReferenceMap;
 import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import net.fabricmc.fabric.api.event.Event;
@@ -10,6 +11,7 @@ import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.tag.Tag;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 
@@ -66,6 +68,8 @@ public final class EntityDamageEventsInternals {
             new ReferenceOpenHashSet<>();
     private static final Reference2ReferenceOpenHashMap<EntityType<? extends Entity>, Impl<? extends Entity>> DAMAGE_EVENTS =
             new Reference2ReferenceOpenHashMap<>();
+    private static final Reference2ReferenceOpenHashMap<Tag<EntityType<?>>, Impl<? extends Entity>> TAG_DAMAGE_EVENTS =
+            new Reference2ReferenceOpenHashMap<>();
     private static final Reference2ReferenceOpenHashMap<Class<? extends Entity>, Impl<? extends Entity>> CLASS_DAMAGE_EVENTS =
             new Reference2ReferenceOpenHashMap<>();
 
@@ -73,12 +77,17 @@ public final class EntityDamageEventsInternals {
         ServerTickEvents.START_WORLD_TICK.register(world -> ENTITIES_HURT_THIS_TICK.clear());
     }
 
-    public static <T extends Entity> @NotNull EntityDamageEvents<T> getOrCreate(EntityType<T> type) {
+    public static <T extends Entity> EntityDamageEvents<T> getOrCreate(EntityType<T> type) {
         //noinspection unchecked
         return (EntityDamageEvents<T>) DAMAGE_EVENTS.computeIfAbsent(type, type1 -> new Impl<>());
     }
 
-    public static <T extends Entity> @NotNull EntityDamageEvents<T> getOrCreateClass(Class<T> clazz) {
+    public static EntityDamageEvents<Entity> getOrCreateTag(Tag<EntityType<?>> tag) {
+        //noinspection unchecked
+        return (EntityDamageEvents<Entity>) TAG_DAMAGE_EVENTS.computeIfAbsent(tag, tag1 -> new Impl<>());
+    }
+
+    public static <T extends Entity> EntityDamageEvents<T> getOrCreateClass(Class<T> clazz) {
         //noinspection unchecked
         return (EntityDamageEvents<T>) CLASS_DAMAGE_EVENTS.computeIfAbsent(clazz, clazz1 -> new Impl<>());
     }
@@ -98,8 +107,23 @@ public final class EntityDamageEventsInternals {
         return ((Impl<T>) CLASS_DAMAGE_EVENTS.get(clazz)).beforeEvent.invoker().beforeEntityDamage(target, source, amount);
     }
 
-    public static <T extends Entity> boolean invoke(T target, DamageSource source, float amount) {
+    @SuppressWarnings("RedundantSuppression")
+    private static <T extends Entity> @NotNull TriState invokeTagBefore(T target, DamageSource source, float amount) {
+        TriState state = TriState.DEFAULT;
+        for (Reference2ReferenceMap.Entry<Tag<EntityType<?>>, Impl<? extends Entity>> entry
+                : TAG_DAMAGE_EVENTS.reference2ReferenceEntrySet()) {
+            if (entry.getKey().contains(target.getType())) {
+                //noinspection RedundantCast,unchecked
+                state = ((Impl<T>) entry.getValue()).beforeEvent.invoker().beforeEntityDamage(target, source, amount);
+                if (state != TriState.DEFAULT)
+                    return state;
+            }
+        }
+        return state;
+    }
 
+    @SuppressWarnings("unused")
+    public static <T extends Entity> boolean invoke(T target, DamageSource source, float amount) {
         if (!ENTITIES_HURT_THIS_TICK.add(target))
             return false;
         TriState state = invokeSuperBefore(target, source, amount, target.getClass());
@@ -107,10 +131,15 @@ public final class EntityDamageEventsInternals {
         if (state != TriState.DEFAULT)
             ret = state.get();
         else {
-            //noinspection unchecked
-            Impl<T> impl = (Impl<T>) DAMAGE_EVENTS.get(target.getType());
-            if (impl != null)
-                ret = impl.beforeEvent.invoker().beforeEntityDamage(target, source, amount).orElse(false);
+            state = invokeTagBefore(target, source, amount);
+            if (state != TriState.DEFAULT)
+                ret = state.get();
+            else {
+                //noinspection unchecked
+                Impl<T> impl = (Impl<T>) DAMAGE_EVENTS.get(target.getType());
+                if (impl != null)
+                    ret = impl.beforeEvent.invoker().beforeEntityDamage(target, source, amount).orElse(false);
+            }
         }
         if (ret)
             invokeCancelled(target, source, amount);
@@ -129,8 +158,18 @@ public final class EntityDamageEventsInternals {
         consumer.accept((Impl<T>) CLASS_DAMAGE_EVENTS.get(clazz));
     }
 
+    private static void invokeTag(Entity target, Consumer<Impl<Entity>> consumer) {
+        for (Reference2ReferenceMap.Entry<Tag<EntityType<?>>, Impl<? extends Entity>> entry
+                : TAG_DAMAGE_EVENTS.reference2ReferenceEntrySet()) {
+            if (entry.getKey().contains(target.getType()))
+                //noinspection unchecked
+                consumer.accept((Impl<Entity>) entry.getValue());
+        }
+    }
+
     private static <T extends Entity> void invokeCancelled(T target, DamageSource source, float amount) {
         invokeSuper(target.getClass(), impl -> impl.cancelledEvent.invoker().entityDamageCancelled(target, source, amount));
+        invokeTag(target, impl -> impl.cancelledEvent.invoker().entityDamageCancelled(target, source, amount));
         //noinspection unchecked
         Impl<T> impl = (Impl<T>) DAMAGE_EVENTS.get(target.getType());
         if (impl == null)
@@ -141,6 +180,7 @@ public final class EntityDamageEventsInternals {
     // TODO this isn't actually called after damage gets applied but I don't care enough to implement that
     private static <T extends Entity> void invokeAfter(T target, DamageSource source, float amount) {
         invokeSuper(target.getClass(), impl -> impl.afterEvent.invoker().afterEntityDamage(target, source, amount));
+        invokeTag(target, impl -> impl.afterEvent.invoker().afterEntityDamage(target, source, amount));
         //noinspection unchecked
         Impl<T> impl = (Impl<T>) DAMAGE_EVENTS.get(target.getType());
         if (impl == null)

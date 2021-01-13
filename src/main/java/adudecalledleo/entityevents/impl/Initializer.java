@@ -13,5 +13,6 @@ public class Initializer implements ModInitializer {
     public void onInitialize() {
         LOGGER.info("Entity Events initializing!!!");
         EntityDamageEventsInternals.initialize();
+        EntityTickEventsInternals.initialize();
     }
 }

@@ -7,7 +7,9 @@ import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
-import org.objectweb.asm.*;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.transformer.FabricMixinTransformerProxy;
@@ -44,7 +46,7 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
             if (name.equals("org.objectweb.asm.ClassReader"))
                 // hardcoded exception to prevent infinite loops
                 return transformed;
-            transformed = tryInjectCallback(transformed);
+            transformed = tryInjectCallbacks(transformed);
             return transformed;
         }
     }
@@ -55,7 +57,7 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
     public static String rtDamageName, rtDamageDesc, rtInvokeDamageDesc;
     public static String rtTickName, rtInvokeTickDesc;
 
-    private static byte[] tryInjectCallback(final byte[] original) {
+    private static byte[] tryInjectCallbacks(final byte[] original) {
         if (original == null)
             return null;
 
@@ -68,7 +70,8 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
             if (classNode.superName != null) {
                 // transform superclass first (because for some reason we get them in reverse by default)
                 try {
-                    PreLaunchInitializer.class.getClassLoader().loadClass(classNode.superName.replace('/', '.'));
+                    PreLaunchInitializer.class.getClassLoader().loadClass(
+                            classNode.superName.replace('/', '.'));
                 } catch (ClassNotFoundException ignored) { }
                 if (ENTITY_SUBCLASSES.contains(classNode.superName))
                     ENTITY_SUBCLASSES.add(classNode.name);
@@ -78,17 +81,17 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
                 return original;
         }
 
-        LOGGER.info("Transforming class '{}'!", classNode.name);
-
         boolean modified = false;
         for (MethodNode method : classNode.methods) {
             if ((method.access & Opcodes.ACC_PUBLIC) == 0)
                 // method must be public
                 continue;
             if (rtDamageName.equals(method.name) && rtDamageDesc.equals(method.desc)) {
+                LOGGER.debug("Injecting damage callback into {}.{}{}", classNode.name, method.name, method.desc);
                 method.instructions.insert(getDamageInjectionInstructions());
                 modified = true;
             } else if (rtTickName.equals(method.name) && "()V".equals(method.desc)) {
+                LOGGER.debug("Injecting tick callback into {}.{}{}", classNode.name, method.name, method.desc);
                 method.instructions.insert(getTickInjectionInstructions());
                 modified = true;
             }
@@ -96,6 +99,8 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
 
         if (!modified)
             return original;
+
+        LOGGER.debug("Injected callbacks into class '{}'!", classNode.name);
 
         ClassWriter classWriter = new ClassWriter(classReader, ClassWriter.COMPUTE_FRAMES);
         classNode.accept(classWriter);
@@ -175,12 +180,13 @@ public class PreLaunchInitializer implements PreLaunchEntrypoint {
         rtEntity = map.mapClassName("intermediary", "net.minecraft.class_1297");
         rtDamageSource = map.mapClassName("intermediary", "net.minecraft.class_1282");
         rtDamageName = map.mapMethodName("intermediary", "net.minecraft.class_1297",
-                "method_5643", "(Lnet/minecraft/class_1297;Lnet/minecraft/class_1282;F)Z");
-        rtDamageDesc = String.format("(L%s;F)Z", rtDamageSource);
-        rtInvokeDamageDesc = String.format("(L%s;L%s;F)Z", rtEntity, rtDamageSource);
+                "method_5643", "(Lnet/minecraft/class_1282;F)Z");
+        rtDamageDesc = String.format("(L%s;F)Z", rtDamageSource.replace('.', '/'));
+        rtInvokeDamageDesc = String.format("(L%s;L%s;F)Z",
+                rtEntity.replace('.', '/'), rtDamageSource.replace('.', '/'));
         rtTickName = map.mapMethodName("intermediary", "net.minecraft.class_1297",
-                "method_18756", "()V");
-        rtInvokeTickDesc = String.format("(L%s;)Z", rtEntity);
+                "method_5773", "()V");
+        rtInvokeTickDesc = String.format("(L%s;)Z", rtEntity.replace('.', '/'));
 
         ENTITY_SUBCLASSES.add(rtEntity.replace('.', '/'));
 

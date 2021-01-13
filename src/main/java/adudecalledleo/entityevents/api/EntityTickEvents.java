@@ -8,18 +8,20 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.AmbientEntity;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.passive.PassiveEntity;
+import net.minecraft.tag.Tag;
 import org.jetbrains.annotations.NotNull;
 
 @SuppressWarnings("UnusedReturnValue")
 public interface EntityTickEvents<T extends Entity> {
-    static <T extends Entity> @NotNull EntityTickEvents<T> of(EntityType<T> type) {
+    static <T extends Entity> @NotNull EntityTickEvents<T> of(@NotNull EntityType<T> type) {
         return EntityTickEventsInternals.getOrCreate(type);
     }
 
-    // ORDER: ofClass of upper superclass, then ofClass of lower superclasses, then ofClass, then of
-    // for example: a zombie would run ofClass(Entity), then ofClass(LivingEntity), then ofClass(HostileEntity),
-    // then ofClass(ZombieEntity), then of(EntityType.ZOMBIE)
-    static <T extends Entity> @NotNull EntityTickEvents<T> ofClass(Class<T> tClass) {
+    static @NotNull EntityTickEvents<Entity> inTag(@NotNull Tag<EntityType<?>> tag) {
+        return EntityTickEventsInternals.getOrCreateTag(tag);
+    }
+
+    static <T extends Entity> @NotNull EntityTickEvents<T> ofClass(@NotNull Class<T> tClass) {
         return EntityTickEventsInternals.getOrCreateClass(tClass);
     }
 

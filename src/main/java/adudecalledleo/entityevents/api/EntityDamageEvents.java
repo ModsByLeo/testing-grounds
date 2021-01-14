@@ -9,7 +9,6 @@ import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.mob.AmbientEntity;
 import net.minecraft.entity.mob.HostileEntity;
 import net.minecraft.entity.passive.PassiveEntity;
-import net.minecraft.tag.EntityTypeTags;
 import net.minecraft.tag.Tag;
 import org.jetbrains.annotations.NotNull;
 

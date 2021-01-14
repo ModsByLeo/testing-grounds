@@ -5,15 +5,18 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public abstract class Node {
     protected @Nullable Node parent;
     protected @NotNull List<Node> children;
+    private final @NotNull List<Node> childrenUnmodView;
 
     public Node() {
         parent = null;
         children = new ArrayList<>();
+        childrenUnmodView = Collections.unmodifiableList(children);
     }
 
     protected void setParent(@Nullable Node parent) {
@@ -24,7 +27,7 @@ public abstract class Node {
         return parent;
     }
     public @NotNull List<Node> getChildren() {
-        return children;
+        return childrenUnmodView;
     }
     public boolean addChild(@NotNull Node node) {
         children.add(node);

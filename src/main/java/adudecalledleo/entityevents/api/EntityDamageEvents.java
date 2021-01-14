@@ -23,9 +23,6 @@ public interface EntityDamageEvents<T extends Entity> {
         return EntityDamageEventsInternals.getOrCreateTag(tag);
     }
 
-    // ORDER: ofClass of upper superclass, then ofClass of lower superclasses, then ofClass, then of
-    // for example: a zombie would run ofClass(Entity), then ofClass(LivingEntity), then ofClass(HostileEntity),
-    // then ofClass(ZombieEntity), then of(EntityType.ZOMBIE)
     static <T extends Entity> @NotNull EntityDamageEvents<T> ofClass(@NotNull Class<T> tClass) {
         return EntityDamageEventsInternals.getOrCreateClass(tClass);
     }

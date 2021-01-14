@@ -106,8 +106,12 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
     }
 
     private static final class ScissorManagerImpl extends ToggleableImpl implements ScissorManager {
+        private int x, y, w, h;
+
         @Override
         public void setRect(int x, int y, int w, int h) {
+            this.x = x; this.y = y; this.w = w; this.h = h;
+
             Window window = MinecraftClient.getInstance().getWindow();
 
             // grab some values for scaling
@@ -347,6 +351,7 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
 
     private final class SavedState {
         private final boolean scissorEnabled;
+        private final int scissorX, scissorY, scissorW, scissorH;
         private final boolean blendEnabled;
         private final int blendSrcFactor, blendDstFactor;
         private final int blendSrcAlpha, blendDstAlpha;
@@ -359,6 +364,10 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
 
         public SavedState() {
             scissorEnabled = scissorManager.enabled;
+            scissorX = scissorManager.x;
+            scissorY = scissorManager.y;
+            scissorW = scissorManager.w;
+            scissorH = scissorManager.h;
             blendEnabled = blendManager.enabled;
             blendSrcFactor = blendManager.srcFactor;
             blendDstFactor = blendManager.dstFactor;
@@ -374,6 +383,7 @@ public final class GooeyRenderContextImpl implements GooeyRenderContext {
 
         public void load() {
             scissorManager.setEnabled(scissorEnabled);
+            scissorManager.setRect(scissorX, scissorY, scissorW, scissorH);
             blendManager.setEnabled(blendEnabled);
             blendManager.setFunctionSeparate(blendSrcFactor, blendDstFactor, blendSrcAlpha, blendDstAlpha);
             alphaTestManager.setEnabled(alphaTestEnabled);

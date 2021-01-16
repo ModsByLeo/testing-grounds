@@ -7,6 +7,7 @@ Welcome to the most cursed GitHub repository ever. _Please locate the nearest ex
 * **GooeyRender** - abstract rendering API, `adudecalledleo.gooeyrender`
 * **Server-Siding** - server-side mod util library, `adudecalledleo.serversiding`
 * **MCMail** [working title] - virtual mail service, `adudecalledleo.mcmail`
+* **Bikeshed** - #api-based diatribe, `adudecalledleo.bikeshed`
 * **Testing Grounds** - general testing stuff, `adudecalledleo.testinggrounds`
 
 ### Can I use it?

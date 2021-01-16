@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "adudecalledleo.bikeshed.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "ListTagAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

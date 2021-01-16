@@ -28,6 +28,7 @@
     ]
   },
   "mixins": [
+    "bikeshed.mixins.json",
     "craftdown.mixins.json",
     "serversiding.mixins.json",
     "serversiding.impl.mixins.json",

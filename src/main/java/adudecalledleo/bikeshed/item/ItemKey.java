@@ -39,6 +39,8 @@ public final class ItemKey {
             return false;
         if (tag == null && !stack.hasTag())
             return true;
+        if (tag == null && stack.hasTag() || tag != null && !stack.hasTag())
+            return false;
         return tag != null && tag.equals(stack.getTag());
     }
 

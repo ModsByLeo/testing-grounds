@@ -5,6 +5,9 @@ import org.jetbrains.annotations.NotNull;
 
 public final class TagUtils {
     public static @NotNull Tag immutableCopyOf(@NotNull Tag original) {
+        if (original.getReader().isImmutable())
+            // already immutable!
+            return original;
         if (original instanceof CompoundTag)
             return ImmutableCompoundTag.copyOf((CompoundTag) original);
         if (original instanceof ListTag)
@@ -15,7 +18,6 @@ public final class TagUtils {
             return ImmutableIntArrayTag.copyOf((IntArrayTag) original);
         if (original instanceof LongArrayTag)
             return ImmutableLongArrayTag.copyOf((LongArrayTag) original);
-        // other types of tags (single values & end) are already immutable
-        return original;
+        throw new UnsupportedOperationException("Tag of type " + original.getClass().getName() + " cannot be copied as immutable!");
     }
 }

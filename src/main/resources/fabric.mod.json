@@ -23,6 +23,7 @@
       "adudecalledleo.testinggrounds.TestingGrounds"
     ],
     "client": [
+      "adudecalledleo.globalclipboard.Initializer",
       "adudecalledleo.gooeyrender.GooeyRender",
       "adudecalledleo.testinggrounds.client.TestingGroundsClient"
     ]

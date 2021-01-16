@@ -23,13 +23,11 @@
       "adudecalledleo.testinggrounds.TestingGrounds"
     ],
     "client": [
-      "adudecalledleo.globalclipboard.Initializer",
       "adudecalledleo.gooeyrender.GooeyRender",
       "adudecalledleo.testinggrounds.client.TestingGroundsClient"
     ]
   },
   "mixins": [
-    "bikeshed.mixins.json",
     "craftdown.mixins.json",
     "serversiding.mixins.json",
     "serversiding.impl.mixins.json",

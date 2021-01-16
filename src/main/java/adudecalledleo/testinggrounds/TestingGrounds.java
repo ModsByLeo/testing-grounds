@@ -36,6 +36,8 @@ public class TestingGrounds implements ModInitializer {
         ModItems.register();
         ModCommands.register();
 
+        // DISABLED:preLaunch
+        /*
         EntityDamageEvents.of(EntityType.CREEPER).registerAfter((target, source, amount) -> {
             // if damage won't kill creeper, ignite it
             if (amount < target.getHealth())
@@ -59,7 +61,7 @@ public class TestingGrounds implements ModInitializer {
             // make arrows a bit floaty
             if (!entity.isOnGround())
                 entity.addVelocity(0, 0.1, 0);
-        });
+        });*/
     }
 
     public static Identifier id(String path) {

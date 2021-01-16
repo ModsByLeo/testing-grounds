@@ -12,7 +12,7 @@
   "icon": "assets/testinggrounds/icon.png",
   "environment": "*",
   "entrypoints": {
-    "preLaunch": [
+    "DISABLED:preLaunch": [
       "adudecalledleo.entityevents.impl.PreLaunchInitializer"
     ],
     "main": [

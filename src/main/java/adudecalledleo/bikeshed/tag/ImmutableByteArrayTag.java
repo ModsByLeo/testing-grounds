@@ -13,7 +13,7 @@ public class ImmutableByteArrayTag extends ByteArrayTag {
     }
 
     public ImmutableByteArrayTag(byte[] value) {
-        super(value);
+        super(value.clone());
     }
 
     public ImmutableByteArrayTag(List<Byte> value) {

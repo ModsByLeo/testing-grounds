@@ -14,7 +14,7 @@ public class ImmutableLongArrayTag extends LongArrayTag {
     }
 
     public ImmutableLongArrayTag(long[] value) {
-        super(value);
+        super(value.clone());
     }
 
     public ImmutableLongArrayTag(LongSet value) {

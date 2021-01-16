@@ -13,7 +13,7 @@ public class ImmutableIntArrayTag extends IntArrayTag {
     }
 
     public ImmutableIntArrayTag(int[] value) {
-        super(value);
+        super(value.clone());
     }
 
     public ImmutableIntArrayTag(List<Integer> value) {

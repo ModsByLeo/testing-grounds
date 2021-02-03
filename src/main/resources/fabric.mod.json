@@ -12,14 +12,13 @@
   "icon": "assets/testinggrounds/icon.png",
   "environment": "*",
   "entrypoints": {
-    "DISABLED:preLaunch": [
+    "preLaunch": [
       "adudecalledleo.entityevents.impl.PreLaunchInitializer"
     ],
     "main": [
       "adudecalledleo.entityevents.impl.Initializer",
       "adudecalledleo.craftdown.Craftdown",
       "adudecalledleo.serversiding.ServerSiding",
-      "adudecalledleo.mcmail.MCMail",
       "adudecalledleo.testinggrounds.TestingGrounds"
     ],
     "client": [
@@ -30,8 +29,7 @@
     "craftdown.mixins.json",
     "serversiding.mixins.json",
     "serversiding.impl.mixins.json",
-    "testinggrounds.mixins.json",
-    "testinggrounds.client.mixins.json"
+    "testinggrounds.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.10.8",

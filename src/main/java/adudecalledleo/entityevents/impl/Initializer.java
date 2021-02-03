@@ -11,10 +11,8 @@ public final class Initializer implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // DISABLED:preLaunch
-        /*
         LOGGER.info("Entity Events initializing!!!");
         EntityDamageEventsInternals.initialize();
-        EntityTickEventsInternals.initialize();*/
+        EntityTickEventsInternals.initialize();
     }
 }

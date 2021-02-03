@@ -12,8 +12,8 @@ group = project.maven_group
 
 repositories {
     maven {
-        name = "ADudeCalledLeo's Fabric mods"
-        url = "https://dl.bintray.com/adudecalledleo/mcmods.fabric"
+        name = "TerraformersMC Maven"
+        url = "https://maven.terraformersmc.com/releases"
     }
 }
 
@@ -54,7 +54,6 @@ dependencies {
 
     // PSA: Some older mods, compiled on Loom 0.2.1, might have outdated Maven POMs.
     // You may need to force-disable transitiveness on them.
-    depImpl("adudecalledleo.mcmods.fabric:lionutils:${project.lionutils_version}", true)
     depImpl "io.github.prospector:modmenu:${project.modmenu_version}"
 }
 

@@ -23,7 +23,6 @@
       "adudecalledleo.testinggrounds.TestingGrounds"
     ],
     "client": [
-      "adudecalledleo.gooeyrender.GooeyRender",
       "adudecalledleo.testinggrounds.client.TestingGroundsClient"
     ]
   },
@@ -32,7 +31,6 @@
     "serversiding.mixins.json",
     "serversiding.impl.mixins.json",
     "testinggrounds.mixins.json",
-    "gooeyrender.mixins.json",
     "testinggrounds.client.mixins.json"
   ],
   "depends": {

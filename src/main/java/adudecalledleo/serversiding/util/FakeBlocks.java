@@ -189,6 +189,6 @@ public final class FakeBlocks {
      * (and also your mod, probably).
      */
     public static void sendRealBlockEntity(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos) {
-        sendRealBlock(player, pos, null);
+        sendRealBlockEntity(player, pos, null);
     }
 }

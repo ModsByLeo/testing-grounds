@@ -1,6 +1,6 @@
 package adudecalledleo.serversiding.menu.simple;
 
-import adudecalledleo.lionutils.item.ItemStackBuilder;
+import adudecalledleo.serversiding.util.ItemStackBuilder;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;

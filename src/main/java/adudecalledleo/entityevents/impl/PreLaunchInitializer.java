@@ -18,7 +18,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 @ApiStatus.Internal
-public class PreLaunchInitializer implements PreLaunchEntrypoint {
+public final class PreLaunchInitializer implements PreLaunchEntrypoint {
     public static final Logger LOGGER = LogManager.getLogger("Entity Events|PreLaunch");
 
     private static final Field ACTIVE_TRANSFORMER, MIXIN_TRANSFORMER;

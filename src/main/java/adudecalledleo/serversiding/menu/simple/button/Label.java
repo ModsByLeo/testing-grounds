@@ -1,7 +1,7 @@
 package adudecalledleo.serversiding.menu.simple.button;
 
-import adudecalledleo.lionutils.item.ItemStackBuilder;
 import adudecalledleo.serversiding.menu.simple.MenuState;
+import adudecalledleo.serversiding.util.ItemStackBuilder;
 import adudecalledleo.serversiding.util.TextUtils;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;

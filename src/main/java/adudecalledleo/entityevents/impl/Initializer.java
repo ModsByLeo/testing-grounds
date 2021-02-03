@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.ApiStatus;
 
 @ApiStatus.Internal
-public class Initializer implements ModInitializer {
+public final class Initializer implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger("Entity Events");
 
     @Override

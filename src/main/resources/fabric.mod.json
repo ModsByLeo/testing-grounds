@@ -12,11 +12,7 @@
   "icon": "assets/testinggrounds/icon.png",
   "environment": "*",
   "entrypoints": {
-    "preLaunch": [
-      "adudecalledleo.entityevents.impl.PreLaunchInitializer"
-    ],
     "main": [
-      "adudecalledleo.entityevents.impl.Initializer",
       "adudecalledleo.craftdown.Craftdown",
       "adudecalledleo.serversiding.ServerSiding",
       "adudecalledleo.testinggrounds.TestingGrounds"

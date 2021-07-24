@@ -6,7 +6,6 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.LiteralText;
-import net.minecraft.util.DyeColor;
 import net.minecraft.util.Formatting;
 
 import static adudecalledleo.serversiding.ServerSiding.LOGGER;
@@ -29,7 +28,7 @@ class SignPromptCommand {
                 player.sendMessage(new LiteralText("Failed to get input from sign!")
                         .styled(style -> style.withColor(Formatting.RED)), false);
             }
-        }, SignPrompt.Background.OAK,
+        }, SignPrompt.VanillaBackgrounds.OAK,
                 new LiteralText("Test!"), new LiteralText("Test 2!"),
                 new LiteralText("Test the Third!"), new LiteralText("Test IV!"));
 

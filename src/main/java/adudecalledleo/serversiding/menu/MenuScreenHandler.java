@@ -20,22 +20,15 @@ class MenuScreenHandler extends ScreenHandler {
     private final int rows;
 
     private static ScreenHandlerType<GenericContainerScreenHandler> rowCountToType(int rowCount) {
-        switch (rowCount) {
-        case 1:
-            return ScreenHandlerType.GENERIC_9X1;
-        case 2:
-            return ScreenHandlerType.GENERIC_9X2;
-        case 3:
-            return ScreenHandlerType.GENERIC_9X3;
-        case 4:
-            return ScreenHandlerType.GENERIC_9X4;
-        case 5:
-            return ScreenHandlerType.GENERIC_9X5;
-        case 6:
-            return ScreenHandlerType.GENERIC_9X6;
-        default:
-            throw new RuntimeException("Size of 9x" + rowCount + " is not supported!");
-        }
+        return switch (rowCount) {
+            case 1 -> ScreenHandlerType.GENERIC_9X1;
+            case 2 -> ScreenHandlerType.GENERIC_9X2;
+            case 3 -> ScreenHandlerType.GENERIC_9X3;
+            case 4 -> ScreenHandlerType.GENERIC_9X4;
+            case 5 -> ScreenHandlerType.GENERIC_9X5;
+            case 6 -> ScreenHandlerType.GENERIC_9X6;
+            default -> throw new RuntimeException("Size of 9x" + rowCount + " is not supported!");
+        };
     }
 
     private final class MenuSlot extends Slot {
@@ -96,11 +89,11 @@ class MenuScreenHandler extends ScreenHandler {
 
         for (row = 0; row < 3; row++) {
             for (col = 0; col < 9; col++)
-                addSlot(new Slot(player.inventory, col + row * 9 + 9, 8 + col * 18, 103 + row * 18 + invHeight));
+                addSlot(new Slot(player.getInventory(), col + row * 9 + 9, 8 + col * 18, 103 + row * 18 + invHeight));
         }
 
         for (row = 0; row < 9; row++)
-            this.addSlot(new Slot(player.inventory, row, 8 + row * 18, 161 + invHeight));
+            this.addSlot(new Slot(player.getInventory(), row, 8 + row * 18, 161 + invHeight));
     }
 
     @Override
@@ -120,7 +113,7 @@ class MenuScreenHandler extends ScreenHandler {
     public ItemStack transferSlot(PlayerEntity player, int index) {
         ItemStack itemStack = ItemStack.EMPTY;
         Slot slot = slots.get(index);
-        if (slot != null && slot.hasStack()) {
+        if (slot.hasStack()) {
             ItemStack itemStack2 = slot.getStack();
             itemStack = itemStack2.copy();
             if (index < 9 * rows) {
@@ -138,20 +131,22 @@ class MenuScreenHandler extends ScreenHandler {
         return itemStack;
     }
 
-    private void sendInventoryPacket(ServerPlayerEntity player, ScreenHandler screenHandler) {
-        player.networkHandler.sendPacket(new InventoryS2CPacket(screenHandler.syncId, screenHandler.getStacks()));
+    private void sendInventoryPacket(ScreenHandler handler, ServerPlayerEntity player) {
+        player.networkHandler.sendPacket(new InventoryS2CPacket(handler.syncId, handler.nextRevision(),
+                handler.getStacks(), handler.getCursorStack()));
     }
 
     private void sendSlotUpdatePacket(ServerPlayerEntity player, int slotId) {
-        player.networkHandler.sendPacket(new ScreenHandlerSlotUpdateS2CPacket(syncId, slotId, slots.get(slotId).getStack()));
+        player.networkHandler.sendPacket(new ScreenHandlerSlotUpdateS2CPacket(syncId, nextRevision(),
+                slotId, slots.get(slotId).getStack()));
     }
 
     private void sendCursorStackUpdatePacket(ServerPlayerEntity player) {
-        player.networkHandler.sendPacket(new ScreenHandlerSlotUpdateS2CPacket(-1, -1, player.inventory.getCursorStack()));
+        player.networkHandler.sendPacket(new ScreenHandlerSlotUpdateS2CPacket(-1, nextRevision(), -1, getCursorStack()));
     }
 
     @Override
-    public ItemStack onSlotClick(int slotId, int clickData, SlotActionType actionType, PlayerEntity player) {
+    public void onSlotClick(int slotId, int clickData, SlotActionType actionType, PlayerEntity player) {
         boolean cancel = false;
         if (player instanceof ServerPlayerEntity) {
             if (slotId >= 0 && slotId < 9 * rows)
@@ -163,19 +158,19 @@ class MenuScreenHandler extends ScreenHandler {
                 sendSlotUpdatePacket((ServerPlayerEntity) player, slotId);
                 sendSlotUpdatePacket((ServerPlayerEntity) player, 9 * rows + 27 + clickData);
                 //                                              our inv + player's main inv + hotbar index
-                return ItemStack.EMPTY;
+                return;
             }
             if (actionType == SlotActionType.CLONE) {
                 // need to resync cursor stack
                 sendCursorStackUpdatePacket((ServerPlayerEntity) player);
-                return ItemStack.EMPTY;
+                return;
             }
             if (actionType == SlotActionType.QUICK_CRAFT && ScreenHandler.unpackQuickCraftStage(clickData) < 2)
                 // simple cancel (only do advanced cancel for QUICK_CRAFT after it's "finished")
-                return ItemStack.EMPTY;
+                return;
             if (actionType == SlotActionType.THROW || actionType == SlotActionType.PICKUP)
                 // simple cancel (required for THROW, a nice optimization for PICKUP)
-                return ItemStack.EMPTY;
+                return;
         }
         DefaultedList<ItemStack> savedStacks = null;
         ItemStack savedCursorStack = ItemStack.EMPTY;
@@ -185,30 +180,28 @@ class MenuScreenHandler extends ScreenHandler {
             savedStacks = DefaultedList.of();
             for (Slot slot : slots)
                 savedStacks.add(slot.getStack().copy());
-            savedCursorStack = player.inventory.getCursorStack();
+            savedCursorStack = getCursorStack().copy();
             blockContentUpdates = true;
         }
-        ItemStack ret = super.onSlotClick(slotId, clickData, actionType, player);
+        super.onSlotClick(slotId, clickData, actionType, player);
         blockContentUpdates = false;
         if (cancel) {
             if (actionType == SlotActionType.QUICK_CRAFT)
                 // clear quick craft info
                 endQuickCraft();
-            ret = ItemStack.EMPTY;
             DefaultedList<ItemStack> trackedStacks = ((ScreenHandlerAccessor) this).getTrackedStacks();
             for (int i = 0; i < savedStacks.size(); i++) {
                 ItemStack stack = savedStacks.get(i);
                 slots.get(i).setStack(stack);
                 trackedStacks.set(i, stack);
             }
-            player.inventory.setCursorStack(savedCursorStack);
+            setCursorStack(savedCursorStack);
             // resync everything
-            sendInventoryPacket((ServerPlayerEntity) player, player.playerScreenHandler);
-            sendInventoryPacket((ServerPlayerEntity) player, this);
+            sendInventoryPacket(player.playerScreenHandler, (ServerPlayerEntity) player);
+            sendInventoryPacket(this, (ServerPlayerEntity) player);
             sendCursorStackUpdatePacket((ServerPlayerEntity) player);
         } else if (player instanceof ServerPlayerEntity)
             menuHandler.postSlotClick((ServerPlayerEntity) player, inventory);
-        return ret;
     }
 
     @Override

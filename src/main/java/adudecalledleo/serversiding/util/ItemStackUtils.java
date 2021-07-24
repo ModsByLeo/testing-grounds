@@ -3,9 +3,9 @@ package adudecalledleo.serversiding.util;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
 
 import java.util.*;
@@ -21,7 +21,7 @@ public final class ItemStackUtils {
      * @return the given stack
      */
     public static ItemStack removeEnchantments(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
+        NbtCompound tag = stack.getTag();
         if (tag == null)
             return stack;
         tag.remove("Enchantments");
@@ -61,10 +61,10 @@ public final class ItemStackUtils {
         return addEnchantments(stack, EnchantMapBuilder.of(enchantment, level));
     }
 
-    private static ListTag getLoreListTag(ItemStack stack) {
+    private static NbtList getLoreListTag(ItemStack stack) {
         if (stack.isEmpty())
             return null;
-        CompoundTag displayTag = stack.getSubTag("display");
+        NbtCompound displayTag = stack.getSubTag("display");
         if (displayTag == null || !displayTag.contains("Lore", /* NbtType.LIST */ 9))
             return null;
         return displayTag.getList("Lore", /* NbtType.STRING */ 8);
@@ -78,7 +78,7 @@ public final class ItemStackUtils {
      * @return list of lore lines, or an empty list if the stack didn't have any lore
      */
     public static List<Text> getLore(ItemStack stack) {
-        ListTag loreListTag = getLoreListTag(stack);
+        NbtList loreListTag = getLoreListTag(stack);
         if (loreListTag == null)
             return new ArrayList<>();
         final int loreSize = loreListTag.size();
@@ -96,29 +96,29 @@ public final class ItemStackUtils {
      * @return the given stack
      */
     public static ItemStack removeLore(ItemStack stack) {
-        CompoundTag displayTag;
+        NbtCompound displayTag;
         if ((displayTag = stack.getSubTag("display")) == null)
             return stack;
         displayTag.remove("Lore");
         return stack;
     }
 
-    private static ListTag getOrCreateLoreListTag(ItemStack stack, boolean clear) {
-        CompoundTag displayTag = stack.getOrCreateSubTag("display");
-        ListTag loreListTag;
+    private static NbtList getOrCreateLoreListTag(ItemStack stack, boolean clear) {
+        NbtCompound displayTag = stack.getOrCreateSubTag("display");
+        NbtList loreListTag;
         if (displayTag.contains("Lore", /* NbtType.LIST */ 9)) {
             loreListTag = displayTag.getList("Lore", /* NbtType.STRING */ 8);
             if (clear)
                 loreListTag.clear();
         } else
-            displayTag.put("Lore", loreListTag = new ListTag());
+            displayTag.put("Lore", loreListTag = new NbtList());
         return loreListTag;
     }
 
     private static ItemStack addToLoreListTag(ItemStack stack, Collection<Text> lines, boolean clear) {
-        ListTag loreListTag = getOrCreateLoreListTag(stack, clear);
+        NbtList loreListTag = getOrCreateLoreListTag(stack, clear);
         for (Text line : lines)
-            loreListTag.add(StringTag.of(Text.Serializer.toJson(line)));
+            loreListTag.add(NbtString.of(Text.Serializer.toJson(line)));
         return stack;
     }
 
@@ -187,7 +187,7 @@ public final class ItemStackUtils {
      */
     public static EnumSet<ItemStack.TooltipSection> getHiddenTooltipSections(ItemStack stack) {
         EnumSet<ItemStack.TooltipSection> flagSet = EnumSet.noneOf(ItemStack.TooltipSection.class);
-        CompoundTag tag = stack.getTag();
+        NbtCompound tag = stack.getTag();
         if (tag == null || !tag.contains("HideFlags", /* NbtType.NUMBER */ 99))
             return flagSet;
         int flags = tag.getInt("HideFlags");
@@ -232,7 +232,7 @@ public final class ItemStackUtils {
     public static ItemStack hideTooltipSections(ItemStack stack, EnumSet<ItemStack.TooltipSection> tooltipSections) {
         if (tooltipSections.isEmpty())
             return stack;
-        CompoundTag tag = stack.getOrCreateTag();
+        NbtCompound tag = stack.getOrCreateTag();
         int existingFlags = 0;
         if (tag.contains("HideFlags", /* NbtType.NUMBER */ 99))
             existingFlags = tag.getInt("HideFlags");
@@ -252,7 +252,7 @@ public final class ItemStackUtils {
     public static ItemStack showTooltipSections(ItemStack stack, EnumSet<ItemStack.TooltipSection> tooltipSections) {
         if (tooltipSections.isEmpty())
             return stack;
-        CompoundTag tag = stack.getOrCreateTag();
+        NbtCompound tag = stack.getOrCreateTag();
         int existingFlags = 0;
         if (tag.contains("HideFlags", /* NbtType.NUMBER */ 99))
             existingFlags = tag.getInt("HideFlags");
@@ -283,7 +283,7 @@ public final class ItemStackUtils {
      * @return the given stack
      */
     public static ItemStack showAllTooltipSections(ItemStack stack) {
-        CompoundTag tag;
+        NbtCompound tag;
         if ((tag = stack.getTag()) == null)
             return stack;
         tag.remove("HideFlags");
@@ -298,7 +298,7 @@ public final class ItemStackUtils {
      * @return {@code true} if the stack is flagged as unbreakable, {@code false} otherwise
      */
     public static boolean isUnbreakable(ItemStack stack) {
-        CompoundTag tag;
+        NbtCompound tag;
         if ((tag = stack.getTag()) == null || !tag.contains("Unbreakable", /* NbtType.BYTE */ 1))
             return false;
         return tag.getBoolean("Unbreakable");
@@ -314,7 +314,7 @@ public final class ItemStackUtils {
      * @return the given stack
      */
     public static ItemStack setUnbreakable(ItemStack stack, boolean unbreakable) {
-        CompoundTag tag;
+        NbtCompound tag;
         if (unbreakable) {
             tag = stack.getOrCreateTag();
             tag.putBoolean("Unbreakable", true);

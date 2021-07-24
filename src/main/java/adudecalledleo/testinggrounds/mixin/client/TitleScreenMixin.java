@@ -5,12 +5,12 @@ import net.fabricmc.api.Environment;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -40,7 +40,7 @@ public abstract class TitleScreenMixin extends Screen {
             matrices.push();
             ThreadLocalRandom rnd = ThreadLocalRandom.current();
             matrices.translate(rnd.nextInt(10) - 5, rnd.nextInt(10) - 5, 0);
-            matrices.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(rnd.nextFloat() * 10 - 5));
+            matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rnd.nextFloat() * 10 - 5));
         }
     }
 

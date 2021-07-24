@@ -151,7 +151,7 @@ public class SimpleMenuHandler implements MenuHandler {
     public void onClose(ServerPlayerEntity player, Inventory inventory) {
         for (Int2ReferenceMap.Entry<SlotListener> entry : slotListeners.int2ReferenceEntrySet()) {
             if (entry.getValue().doDropOnClose(entry.getIntKey(), player, inventory))
-                player.inventory.offerOrDrop(player.getServerWorld(), inventory.getStack(entry.getIntKey()));
+                player.getInventory().offerOrDrop(inventory.getStack(entry.getIntKey()));
         }
     }
 }

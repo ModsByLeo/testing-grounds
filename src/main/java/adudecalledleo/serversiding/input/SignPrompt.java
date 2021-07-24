@@ -4,7 +4,7 @@ import adudecalledleo.serversiding.impl.SignPromptStorage;
 import adudecalledleo.serversiding.util.FakeBlocks;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.packet.s2c.play.SignEditorOpenS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -54,32 +54,40 @@ public final class SignPrompt {
         void accept(@NotNull Result result);
     }
 
-    public enum Background {
+    @FunctionalInterface
+    public interface Background {
+        @NotNull BlockState getBlockState();
+    }
+
+    public enum VanillaBackgrounds implements Background {
         OAK(Blocks.OAK_SIGN.getDefaultState()),
         SPRUCE(Blocks.SPRUCE_SIGN.getDefaultState()),
         BIRCH(Blocks.BIRCH_SIGN.getDefaultState()),
         ACACIA(Blocks.ACACIA_SIGN.getDefaultState()),
         JUNGLE(Blocks.JUNGLE_SIGN.getDefaultState()),
-        DARK_OAK(Blocks.DARK_OAK_SIGN.getDefaultState());
+        DARK_OAK(Blocks.DARK_OAK_SIGN.getDefaultState()),
+        CRIMSON(Blocks.CRIMSON_SIGN.getDefaultState()),
+        WARPED(Blocks.WARPED_SIGN.getDefaultState());
 
         private final BlockState blockState;
 
-        Background(BlockState blockState) {
+        VanillaBackgrounds(BlockState blockState) {
             this.blockState = blockState;
         }
 
+        @Override
         public @NotNull BlockState getBlockState() {
             return blockState;
         }
     }
 
     public static void open(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos, @NotNull Callback callback,
-            @NotNull SignPrompt.Background background, @NotNull Text... initialLines) {
+                            @NotNull SignPrompt.Background background, @NotNull Text... initialLines) {
         SignPromptStorage.Entry entry = SignPromptStorage.remove(player);
         if (entry != null)
             entry.fail();
 
-        CompoundTag tag = new CompoundTag();
+        NbtCompound tag = new NbtCompound();
         for (int i = 0; i < 4; i++) {
             tag.putString("Text" + (i + 1),
                     i < initialLines.length

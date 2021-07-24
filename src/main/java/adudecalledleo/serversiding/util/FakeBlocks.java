@@ -8,7 +8,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.CommandBlockBlockEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.BlockUpdateS2CPacket;
@@ -50,7 +50,8 @@ public final class FakeBlocks {
         // 10 is missing (possibly used to be Note Block?)
         BED(BlockEntityType.BED, 11),
         JIGSAW_BLOCK(BlockEntityType.JIGSAW, 12),
-        CAMPFIRE(BlockEntityType.CAMPFIRE, 13);
+        CAMPFIRE(BlockEntityType.CAMPFIRE, 13),
+        BEEHIVE(BlockEntityType.BEEHIVE, 13);
 
         private final Identifier registryId;
         private final int updatePacketId;
@@ -103,7 +104,7 @@ public final class FakeBlocks {
     }
 
     private static void writeIdentifyingData(@NotNull BlockPos pos, @NotNull FakeBlocks.UpdatableEntityType type,
-            @NotNull CompoundTag tag) {
+            @NotNull NbtCompound tag) {
         tag.putString("id", type.getRegistryId().toString());
         tag.putInt("x", pos.getX());
         tag.putInt("y", pos.getY());
@@ -117,10 +118,10 @@ public final class FakeBlocks {
      * (and also your mod, probably).
      */
     public static void sendFakeBlockEntity(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos,
-            @NotNull FakeBlocks.UpdatableEntityType type, @NotNull CompoundTag tag,
+            @NotNull FakeBlocks.UpdatableEntityType type, @NotNull NbtCompound tag,
             @Nullable GenericFutureListener<? extends Future<? super Void>> listener) {
         if (!player.notInAnyWorld && World.isValid(pos)) {
-            CompoundTag copy = tag.copy();
+            NbtCompound copy = tag.copy();
             writeIdentifyingData(pos, type, copy);
             player.networkHandler.sendPacket(new BlockEntityUpdateS2CPacket(pos, type.getUpdatePacketId(), copy), listener);
         }
@@ -133,7 +134,7 @@ public final class FakeBlocks {
      * (and also your mod, probably).
      */
     public static void sendFakeBlockEntity(@NotNull ServerPlayerEntity player, @NotNull BlockPos pos,
-            @NotNull FakeBlocks.UpdatableEntityType type, @NotNull CompoundTag tag) {
+            @NotNull FakeBlocks.UpdatableEntityType type, @NotNull NbtCompound tag) {
         sendFakeBlockEntity(player, pos, type, tag, null);
     }
 

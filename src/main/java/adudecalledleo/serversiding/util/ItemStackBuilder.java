@@ -7,7 +7,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemConvertible;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.text.Text;
 
@@ -27,7 +27,7 @@ public final class ItemStackBuilder {
     private boolean unbreakable;
     private EnumSet<ItemStack.TooltipSection> hiddenTooltipSections;
     private EnchantMapBuilder enchantMapBuilder;
-    private Consumer<CompoundTag> tagMutator;
+    private Consumer<NbtCompound> tagMutator;
 
     private ItemStackBuilder() {
         item = Items.AIR;
@@ -237,16 +237,15 @@ public final class ItemStackBuilder {
      *         tag mutator to use
      * @return this builder
      */
-    public ItemStackBuilder setTagMutator(Consumer<CompoundTag> tagMutator) {
+    public ItemStackBuilder setTagMutator(Consumer<NbtCompound> tagMutator) {
         this.tagMutator = tagMutator;
         return this;
     }
 
     /**
      * Sets the tag to copy to the resulting stack's tag.<p>
-     * This tag is copied via <code>{@linkplain ItemStack#getOrCreateTag()}.{@linkplain
-     * CompoundTag#copyFrom(CompoundTag)
-     * copyFrom(tag)}</code>.<p>
+     * This tag is copied via
+     * <code>{@linkplain ItemStack#getOrCreateTag()}.{@linkplain NbtCompound#copyFrom(NbtCompound) copyFrom(tag)}</code>.<p>
      * This copying is done <em>after</em> the item is built,
      * meaning this tag can override the builder's other settings.<p>
      * <strong>NOTE:</strong> This overwrites the {@linkplain #setTagMutator(Consumer) tag mutator}!
@@ -255,7 +254,7 @@ public final class ItemStackBuilder {
      *         tag to copy from
      * @return this builder
      */
-    public ItemStackBuilder copyFromTag(CompoundTag source) {
+    public ItemStackBuilder copyFromTag(NbtCompound source) {
         return setTagMutator(tag -> tag.copyFrom(source));
     }
 
@@ -271,7 +270,7 @@ public final class ItemStackBuilder {
     public ItemStackBuilder playerHead(GameProfile profile) {
         item = Items.PLAYER_HEAD;
         damageSet = false;
-        return setTagMutator(tag -> tag.put("SkullOwner", NbtHelper.fromGameProfile(new CompoundTag(), profile)));
+        return setTagMutator(tag -> tag.put("SkullOwner", NbtHelper.writeGameProfile(new NbtCompound(), profile)));
     }
 
     /**
